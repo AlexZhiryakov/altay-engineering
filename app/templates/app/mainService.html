@@ -1,0 +1,28 @@
+{% load static %}
+
+<div class="service">
+    <h2>Наши услуги</h2>
+    <div class="allServices">
+        <div class="block">
+            <a href="{% url 'rental-welding-equipment' %}">
+                <img src="{% static 'img/аренда.png' %}" alt="Аренда сварочных аппаратов" >
+                <p>Аренда сварочных <br/>аппаратов</p>
+                <button>Подробнее</button>
+            </a>
+        </div>
+        <div class="block" id="block">
+            <a href="{% url 'repair-welding-equipment' %}">
+                <img id="repair" src="{% static 'img/ремонт.png' %}" alt="Ремонт сварочных аппаратов" >
+                <p>Ремонт сварочных <br/>аппаратов</p>
+                <button>Подробнее</button>
+            </a>
+        </div>
+        <div class="block">
+            <a href="{% url 'pipeline-installation' %}">
+                <img src="{% static 'img/монтаж трубопровода.png' %}" alt="Монтаж трубопровода" >
+                <p>Монтаж трубопровода</p>
+                <button>Подробнее</button>
+            </a>
+        </div>
+    </div>
+</div>

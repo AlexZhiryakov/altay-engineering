@@ -1,0 +1,84 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block headerScript %}
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=67ebaace-659d-48c5-82a3-0f127af8faaa&lang=ru_RU" type="text/javascript"></script>
+{% endblock %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'mainCatalog.css' %}">
+    <link rel="stylesheet" href="{% static 'mainService.css' %}">
+    <link rel="stylesheet" href="{% static 'mainCompany.css' %}">
+    <link rel="stylesheet" href="{% static 'mainLocation.css' %}">
+{% endblock %}
+
+{% block content %}
+<main>
+    {% include "app/mainCompany.html" %}
+    {% include "app/mainCatalog.html" %}
+    {% include "app/mainService.html" %}
+    {% include "app/mainLocation.html" %}
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll('.product, .block');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Отключаем слежку после появления элемента
+                }
+            });
+        }, {
+            threshold: 0.2 // Чем меньше значение, тем раньше появится элемент
+        });
+
+        elements.forEach(element => {
+            element.classList.add('fade-in-scroll'); // Добавляем класс анимации
+            observer.observe(element);
+        });
+    });
+</script>
+<script type="text/javascript">
+    ymaps.ready(init);
+
+    function init() {
+        // Координаты офиса и склада
+        var officeLocation = [53.3551, 83.7635]; // Офис: Сиреневая улица, 23к1
+        var warehouseLocation = [53.3435, 83.7763]; // Склад: проспект Космонавтов, 8/29
+        var centerMap = [53.349962, 83.770011]
+
+        // Создание карты
+        var map = new ymaps.Map('map', {
+            center: centerMap, // Центр карты на офис
+            zoom: 14
+        });
+
+        // Добавление маркера для офиса
+        var officeMarker = new ymaps.Placemark(officeLocation, {
+            hintContent: 'Наш офис',
+            balloonContent: `
+                <strong>ОФИС:</strong> Сиреневая улица, 23к1<br>
+                <strong>РЕЖИМ РАБОТЫ:</strong> Пн.–Пт. c 9:00 до 18:00
+            `
+        });
+
+        // Добавление маркера для склада
+        var warehouseMarker = new ymaps.Placemark(warehouseLocation, {
+            hintContent: 'Наш склад',
+            balloonContent: `
+                <strong>СКЛАД:</strong> проспект Космонавтов, 8/29<br>
+                <strong>РЕЖИМ РАБОТЫ:</strong> Пн.–Пт. c 9:00 до 18:00
+            `
+        });
+
+        // Добавление маркеров на карту
+        map.geoObjects.add(officeMarker);
+        map.geoObjects.add(warehouseMarker);
+    }
+</script>
+{% endblock %}

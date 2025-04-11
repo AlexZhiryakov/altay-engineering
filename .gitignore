@@ -1,0 +1,39 @@
+# Виртуальное окружение
+venv/
+.env/
+
+# Файлы IDE
+.idea/
+.vscode/
+
+# Базы данных
+*.sqlite3
+*.db
+
+# Статика и медиа (если используются CDN)
+/static/
+/media/
+
+# Кеш Python
+__pycache__/
+*.py[cod]
+
+# Логи
+*.log
+
+# Файлы окружения
+.env
+.env.local
+
+# Beget-специфичные файлы
+*.pyc
+*.swp
+*.swo
+
+# Бэкапы БД (чтобы случайно не залить дампы)
+*.dump
+*.sql
+
+# Логи сервера
+*.error.log
+*.access.log

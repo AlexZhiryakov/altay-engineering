@@ -1,0 +1,70 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'products/weldingMachines.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Сварочные аппараты</span>
+</nav>
+<main>
+    <h1>Сварочные аппараты</h1>
+    <div class="catalog">
+        <div class="allProducts">
+            <div class="product">
+                <a href="{% url 'hydraulic' %}">
+                    <img src="{% static 'img/Гидравлические сварочные аппараты.jpg' %}" alt="Гидравлические сварочные аппараты" >
+                    <p>Гидравлические сварочные <br/>аппараты</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'mechanical' %}">
+                    <img src="{% static 'img/Механические сварочные аппараты.jpg' %}" alt="Механические сварочные аппараты" >
+                    <p>Механические сварочные <br/>аппараты</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'electrofusion' %}">
+                    <img src="{% static 'img/Электромуфтовые сварочные аппараты.jpg' %}" alt="Электромуфтовые сварочные аппараты" >
+                    <p>Электромуфтовые сварочные <br/>аппараты</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'bell-shaped' %}">
+                    <img src="{% static 'img/Раструбные сварочные аппараты.jpg' %}" alt="Раструбные сварочные аппараты" >
+                    <p>Раструбные сварочные <br/>аппараты</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll('h1, .product');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Отключаем слежку после появления элемента
+                }
+            });
+        }, {
+            threshold: 0.2 // Чем меньше значение, тем раньше появится элемент
+        });
+
+        elements.forEach(element => {
+            element.classList.add('fade-in-scroll'); // Добавляем класс анимации
+            observer.observe(element);
+        });
+    });
+</script>
+{% endblock %}

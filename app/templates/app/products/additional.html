@@ -1,0 +1,52 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'products/weldingMachines.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Дополнительное оборудование</span>
+</nav>
+<main>
+    <h1>Дополнительное оборудование</h1>
+    <div class="catalog">
+        <div class="allProducts">
+            <div class="product">
+                <a href="{% url 'automationUnit' %}">
+                    <img id="flange" src="{% static 'img/Блок_автоматизации.jpg' %}" alt="Блок автоматизации" >
+                    <p>Блок автоматизации</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll('h1, .product');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Отключаем слежку после появления элемента
+                }
+            });
+        }, {
+            threshold: 0.2 // Чем меньше значение, тем раньше появится элемент
+        });
+
+        elements.forEach(element => {
+            element.classList.add('fade-in-scroll'); // Добавляем класс анимации
+            observer.observe(element);
+        });
+    });
+</script>
+{% endblock %}

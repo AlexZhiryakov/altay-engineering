@@ -1,0 +1,42 @@
+{% load static %}
+
+<div class="catalog">
+    <div class="allProducts">
+        <div class="product">
+            <a href="{% url 'welding-machines' %}">
+                <img src="{% static 'img/Гидравлические сварочные аппараты.jpg' %}" alt="Гидравлические сварочные аппараты" >
+                <p>Cварочные аппараты</p>
+            </a>
+        </div>
+        <div class="product">
+            <a href="{% url 'components' %}">
+                <img src="{% static 'img/Комплектующие.jpg' %}" alt="Комплектующие" >
+                <p>Комплектующие</p>
+            </a>
+        </div>
+        <div class="product">
+            <a href="{% url 'additional' %}">
+                <img src="{% static 'img/Дополнительное оборудование.jpg' %}" alt="Дополнительное оборудование" >
+                <p>Дополнительное оборудование</p>
+            </a>
+        </div>
+        <div class="product">
+            <a href="{% url 'fitting' %}">
+                <img src="{% static 'img/Фитинги.png' %}" alt="Фитинги" >
+                <p>Фитинги</p>
+            </a>
+        </div>
+        <div class="product">
+            <a href="{% url 'pipes' %}">
+                <img id="pipes" src="{% static 'img/Трубы ПНД водопроводные.png' %}" alt="Гидравлические сварочные аппараты" >
+                <p>Трубы ПНД</p>
+            </a>
+        </div>
+        <div class="product">
+            <a href="{% url 'shut-off-valves' %}">
+                <img id="shut-off-valves" src="{% static 'img/Фланец.png' %}" alt="Запорные арматуры" >
+                <p>Запорные арматуры</p>
+            </a>
+        </div>
+    </div>
+</div>

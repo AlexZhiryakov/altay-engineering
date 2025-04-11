@@ -1,0 +1,192 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'products/baseProducts.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>{{ category.name }}</span>
+</nav>
+<main>
+    <div class="filters-column">
+        <button class="filters-toggle" onclick="toggleFilters()">Фильтры</button>
+        <div class="filters-container" id="filters-container">
+            <form method="GET" id="filter-form">
+                <div class="filters">
+                    {% for field, label in characteristics.items %}
+                    <div class="filter-group">
+                        <div class="filter-title" onclick="toggleFilter(this)">
+                            <div class="title">{{ label }}</div>
+                            <span>›</span>
+                        </div>
+                        <div class="filter-options">
+                            {% with values=characteristic_values|get_item:field %}
+                                {% if values.0|is_numeric %}
+                                    {% for value in values|sort_numeric %}
+                                        {% if value %}
+                                            <label>
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="{{ field }}" 
+                                                    value="{{ value }}"
+                                                    {% if selected_filters|get_item:field and value in selected_filters|get_item:field %}checked{% endif %}
+                                                    onchange="document.getElementById('filter-form').submit();"
+                                                >
+                                                {{ value }}
+                                            </label>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% for value in values %}
+                                        {% if value %}
+                                            <label>
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="{{ field }}" 
+                                                    value="{{ value }}"
+                                                    {% if selected_filters|get_item:field and value in selected_filters|get_item:field %}checked{% endif %}
+                                                    onchange="document.getElementById('filter-form').submit();"
+                                                >
+                                                {{ value }}
+                                            </label>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% for key, values in request.GET.items %}
+                    {% if key not in characteristics %}
+                        {% for value in values %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+
+    <div class="products-column">
+        <h1>{{ category.name }}</h1>
+        <p class="description">{{ category.description }}</p>
+        
+        <!-- Кнопка фильтров для мобильной версии -->
+        <div class="mobile-filters-btn">
+            <button class="filters-toggle" onclick="toggleFilters()">Фильтры</button>
+        </div>
+        
+        <div class="products">
+            {% if products %}
+                {% for product in products %}
+                <div class="product-item">
+                    <div class="product-image">
+                        <a href="{% url 'product_detail' product.id %}">
+                            {% if product.images.all %}
+                                <img src="{{ product.images.all.0.image.url }}" alt="{{ product.name }}">
+                            {% endif %}
+                        </a>
+                    </div>
+                    <a href="{% url 'product_detail' product.id %}" class="name">{{ product.name }}</a>
+                    {% if product.price %}
+                        <p><strong>{{ product.price|format_price }}</strong></p>
+                    {% else %}
+                        <p><strong>По запросу</strong></p>
+                    {% endif %}
+                    <button class="cart-btn {% if product.id|stringformat:"s" in request.session.cart %}in-cart{% endif %}" 
+                        data-product-id="{{ product.id }}">
+                        В корзину
+                    </button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-products-message">
+                    <p>Товаров по выбранным фильтрам не найдено.</p>
+                    <button onclick="resetFilters()">Сбросить фильтры</button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Анимация элементов
+        const elements = document.querySelectorAll('h1, .description, .product-item');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.2 });
+        elements.forEach(el => observer.observe(el));
+
+        // Корзина
+        document.querySelectorAll(".cart-btn").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const productId = this.dataset.productId;
+                fetch(`/add-to-cart?product_id=${productId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.classList.toggle("in-cart", data.in_cart);
+                    });
+            });
+        });
+
+        // Автооткрытие фильтров с выбранными значениями
+        document.querySelectorAll('.filter-group').forEach(group => {
+            if (group.querySelector('input[type="checkbox"]:checked')) {
+                group.classList.add('open');
+            }
+        });
+    });
+
+    function toggleFilter(element) {
+        element.parentElement.classList.toggle("open");
+    }
+
+    function toggleFilters() {
+        const container = document.getElementById('filters-container');
+        container.classList.toggle('active');
+        
+        // Блокировка прокрутки тела при открытых фильтрах
+        document.body.style.overflow = container.classList.contains('active') ? 'hidden' : '';
+    }
+
+    function resetFilters() {
+        document.querySelectorAll('#filter-form input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+        });
+        document.getElementById('filter-form').submit();
+    }
+
+    // Закрытие фильтров при клике вне области
+    document.addEventListener('click', function(e) {
+        const filters = document.getElementById('filters-container');
+        const toggleBtns = document.querySelectorAll('.filters-toggle');
+        let isToggleBtn = false;
+        
+        toggleBtns.forEach(btn => {
+            if (e.target === btn) isToggleBtn = true;
+        });
+        
+        if (window.innerWidth <= 1200 && 
+            filters.classList.contains('active') &&
+            !filters.contains(e.target) && 
+            !isToggleBtn) {
+            toggleFilters();
+        }
+    });
+</script>
+{% endblock %}

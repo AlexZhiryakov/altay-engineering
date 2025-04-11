@@ -1,0 +1,95 @@
+{% load static %}
+
+<footer>
+<div class="desktop">
+    <div class="upperFooter">
+        <nav>
+        <ul>
+            <li><span>Продукция</span></li>
+            <li class="desktopLi"><a href="{% url 'welding-machines' %}">Сварочные аппараты</a></li>
+            <li class="desktopLi"><a href="{% url 'components' %}">Комплектующие</a></li>
+            <li class="desktopLi"><a href="{% url 'additional' %}">Дополнительное оборудование</a></li>
+            <li class="desktopLi"><a href="{% url 'fitting' %}">Фитинги</a></li>
+            <li class="desktopLi"><a href="{% url 'pipes' %}">Трубы ПНД</a></li>
+            <li class="desktopLi"><a href="{% url 'shut-off-valves' %}">Запорные арматуры</a></li>
+        </ul>
+        <ul>
+            <li><span>Услуги</span></li>
+            <li class="desktopLi"><a href="{% url 'rental-welding-equipment' %}">Аренда сварочных аппаратов</a></li>
+            <li class="desktopLi"><a href="{% url 'repair-welding-equipment' %}">Ремонт сварочных аппаратов</a></li>
+            <li class="desktopLi"><a href="{% url 'pipeline-installation' %}">Монтаж трубопровода</a></li>
+        </ul>
+        <ul>
+            <li><span>Компания</span></li>
+            <li class="desktopLi"><a href="{% url 'company/aboutCompany' %}">О компании</a></li>
+            <li class="desktopLi"><a href="{% url 'company/details' %}">Реквизиты</a></li>
+        </ul>
+        <ul>
+            <li class="desktopLi"><a href="tel:+79059267509" id="socials" aria-label="Позвонить по номеру +7(905) 926 75 09" target="_blank">+7(905) 926 75 09</a></li>
+            <li class="desktopLi"><a href="tel:+79130258069" aria-label="Позвонить по номеру +7(913) 025 80 69" target="_blank">+7(913) 025 80 69</a></li>
+            <ul>
+                <li><a href="https://wa.me/79059267509" class="menu-item" rel="nofollow" aria-label="Написать в WhatsApp" target="_blank"><img src="{% static 'img/WhatsApp.png' %}" alt="WhatsApp" /></a></li>
+                <li><a href="https://t.me/neqvit" class="menu-item" rel="nofollow" aria-label="Написать в Telegram" target="_blank"><img src="{% static 'img/Telegram.png' %}" alt="Telegram" /></a></li>
+                <li><a href="mailto:Altay-engineering@yandex.ru" class="menu-item" rel="nofollow" aria-label="Написать на почту" target="_blank"><img src="{% static 'img/Email.png' %}" alt="Email" /></a></li>
+            </ul>
+        </ul>
+        </nav>
+        <div class="lowerFooter">
+            <div>© 2023 ООО «АЛТАЙ-ИНЖИНИРИНГ»</div>
+            <a href="{% url 'privacy-policy' %}">Политика конфиденциальности</a>
+        </div>
+    </div>
+</div>
+<div class="mobile">
+    <div class="upperFooter">
+        <nav>
+            <ul class="footer-section">
+                <li>
+                    <span class="mobile-toggle">Продукция</span>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'welding-machines' %}">Гидравлические сварочные аппараты</a></li>
+                        <li><a href="{% url 'components' %}">Комплектующие</a></li>
+                        <li><a href="{% url 'additional' %}">Дополнительное оборудование</a></li>
+                        <li><a href="{% url 'fitting' %}">Фитинги</a></li>
+                        <li><a href="{% url 'pipes' %}">Трубы ПНД</a></li>
+                        <li><a href="{% url 'shut-off-valves' %}">Запорные арматуры</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <span class="line"></span>
+            <ul class="footer-section">
+                <li>
+                    <span class="mobile-toggle">Услуги</span>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'rental-welding-equipment' %}">Аренда сварочных аппаратов</a></li>
+                        <li><a href="{% url 'repair-welding-equipment' %}">Ремонт сварочных аппаратов</a></li>
+                        <li><a href="{% url 'pipeline-installation' %}">Монтаж трубопровода</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <span class="line"></span>
+            <ul class="footer-section">
+                <li>
+                    <span class="mobile-toggle">Компания</span>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'company/aboutCompany' %}">О компании</a></li>
+                        <li><a href="{% url 'company/details' %}">Реквизиты</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <span class="line"></span>
+            <ul class="footer-section">
+                <li><a class="menu-item"  href="tel:+79059267509" id="socials" aria-label="Позвонить по номеру +7(905) 926 75 09" target="_blank">+7(905) 926 75 09</a></li>
+                <li><a class="menu-item" href="tel:+79130258069" aria-label="Позвонить по номеру +7(913) 025 80 69" target="_blank">+7(913) 025 80 69</a></li>
+                <li><a class="menu-item" href="https://wa.me/79059267509" rel="nofollow" aria-label="Написать в WhatsApp" target="_blank">WhatsApp</a></li>
+                <li><a class="menu-item" href="https://t.me/neqvit" rel="nofollow" aria-label="Написать в Telegram" target="_blank">Telegram</a></li></li>
+                <li><a class="menu-item" href="mailto:Altay-engineering@yandex.ru" rel="nofollow" aria-label="Написать на почту" target="_blank">Altay-engineering@yandex.ru</a></li>
+            </ul>
+        </nav>
+        <div class="lowerFooter">
+            <div>© 2023 ООО «АЛТАЙ-ИНЖИНИРИНГ»</div>
+            <a href="{% url 'privacy-policy' %}">Политика конфиденциальности</a>
+        </div>
+    </div>
+</div>
+</footer>

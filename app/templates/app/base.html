@@ -1,0 +1,77 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АЛТАЙ ИНЖИНИРИНГ</title>
+    <link rel="icon" href="{% static 'img/лого_алтай_инжиниринг.jpg' %}" type="image/jpg">
+    <link rel="stylesheet" href="{% static 'partitials/header.css' %}">
+    <link rel="stylesheet" href="{% static 'partitials/footer.css' %}">
+    <link rel="stylesheet" href="{% static 'partitials/base.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700;800&display=swap" rel="stylesheet">
+    {% block style %} {% endblock %}
+    {% block headerScript %} {% endblock %}
+</head>
+<body>
+    <div class="container">
+        {% include "app/partials/header.html" %}
+        
+        {% block content %} {% endblock %}
+
+        {% include "app/partials/footer.html" %}
+    </div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const burgerMenu = document.getElementById("burgerMenu");
+    const navMenu = document.querySelector("nav");
+    const topNav = document.querySelector(".ulTopNav");
+    const bottomNav = document.querySelector(".ulBottomNav");
+    const burgerCheckbox = document.getElementById("burger-checkbox");
+    const body = document.body;
+    const toggles = document.querySelectorAll(".mobile-toggle");
+
+    toggles.forEach(toggle => {
+        toggle.addEventListener("click", function () {
+            const links = this.nextElementSibling;
+            links.classList.toggle("active");
+        });
+    });
+
+    burgerCheckbox.addEventListener("change", function () {
+        if (this.checked) {
+            body.classList.add("no-scroll");
+        } else {
+            body.classList.remove("no-scroll");
+        }
+    });
+
+    burgerMenu.addEventListener("click", function () {
+        burgerMenu.classList.toggle("active");
+        navMenu.classList.toggle("active");
+        topNav.classList.toggle("active");
+        bottomNav.classList.toggle("active");
+
+        document.body.style.overflow = navMenu.classList.contains("active") ? "hidden" : "";
+    });
+
+    navMenu.addEventListener("click", function (event) {
+        if (event.target.tagName === "A") {
+            burgerMenu.classList.remove("active");
+            navMenu.classList.remove("active");
+            topNav.classList.remove("active");
+            bottomNav.classList.remove("active");
+            document.body.style.overflow = "";
+        }
+    });
+});
+
+
+</script>
+
+{% block script %} {% endblock %}
+
+</body>
+</html>

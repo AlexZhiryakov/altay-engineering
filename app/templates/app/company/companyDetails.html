@@ -1,0 +1,146 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'company/companyDetails.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Реквизиты</span>
+</nav>
+<main>
+    <h1>Реквизиты</h1>
+    <div class="card">
+        <div class="string">
+            <p class="name">Организационно-правовая форма</p>
+            <p>Общество с ограниченной ответственностью</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Наименование организации полное</p>
+            <p>Общество с ограниченной ответственностью «Алтай-Инжиниринг»</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Наименование организации сокращенное</p>
+            <p>ООО «Алтай-Инжиниринг»</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Юридический адрес</p>
+            <p>656062, Алтайский край, г Барнаул, ул Антона Петрова, д. 254, кв. 413</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Фактический адрес</p>
+            <p>656062, Алтайский край, г Барнаул, ул Антона Петрова, д. 254, кв. 413</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Наименование организации полное</p>
+            <p>Общество с ограниченной ответственностью «Алтай-Инжиниринг»</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Наименование организации сокращенное</p>
+            <p>ООО «Алтай-Инжиниринг»</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Юридический адрес</p>
+            <p>656062, Алтайский край, г Барнаул, ул Антона Петрова, д. 254, кв. 413</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">ИНН</p>
+            <p>2223643094</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">КПП</p>
+            <p>222301001</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Дата постановки на учет</p>
+            <p>14.09.2023</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Основной государственный регистрационный номер (ОГРН)</p>
+            <p>1232200016245</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">ОКПО</p>
+            <p>87108370</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Сведения о видах деятельности</p>
+            <p>46.74 Торговля оптовая скобяными изделиями, водопроводным и отопительным оборудованием и принадлежностями</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Наименование банка</p>
+            <p>Филиал «Новосибирский» АО «Альфа-банк»</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Расчетный счет</p>
+            <p>40702810923100009211</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">К/ счет</p>
+            <p>30101810600000000774</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">БИК Банка</p>
+            <p>045004774</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Телефон/факс</p>
+            <p>+7(913)262-2005</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Генеральный директор</p>
+            <p>Кошуба Сергей Владимирович</p>
+        </div>
+    </div>
+    <div class="download_block">
+        <a class="download" href="{% url 'download_file' %}">СКАЧАТЬ ФАЙЛ С РЕКВИЗИТАМИ</a>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll('h1, .string');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Отключаем слежку после появления элемента
+                }
+            });
+        }, {
+            threshold: 0.2 // Чем меньше значение, тем раньше появится элемент
+        });
+
+        elements.forEach(element => {
+            element.classList.add('fade-in-scroll'); // Добавляем класс анимации
+            observer.observe(element);
+        });
+    });
+</script>
+{% endblock %}

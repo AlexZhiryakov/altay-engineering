@@ -1,0 +1,128 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'shoppingCart.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Корзина товаров</span>
+</nav>
+
+<main>
+    <h1>Корзина</h1>
+    <div class="cart-items">
+        {% if cart_items %}
+            {% for product, quantity in cart_items.items %}
+                <div class="cart-item" id="cart-item-{{ product.id }}">
+                    <a href="{% url 'product_detail' product.id %}">
+                        <div>
+                            {% if product.images.all %}
+                                <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" width="100">
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div>
+                    <a href="{% url 'product_detail' product.id %}">
+                        <h2>{{ product.name }}</h2>
+                    </a>
+                    <p>
+                        {% if product.price is not None %}
+                            {{ product.price|format_price }}/шт
+                        {% else %}
+                            По запросу
+                        {% endif %}
+                    </p>
+                    <div class="quantity-control">
+                        <input type="number" id="quantity-{{ product.id }}" class="quantity-input"
+                        value="{{ quantity }}" data-product-id="{{ product.id }}">
+                    </div>
+                    <p>
+                        <span id="calculated-total-{{ product.id }}">
+                            {% if product.price is not None %}
+                                {{ product.price|mul:quantity|format_price }}
+                            {% endif %}
+                        </span>
+                    </p>
+                    <button class="remove-item" data-product-id="{{ product.id }}">Удалить</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <br>
+            <p>Ваша корзина пуста.</p>
+        {% endif %}
+    </div>
+
+    {% if total_cart_price is not None %}
+    <div class="orderForm">
+        <div class="total-price">
+            <div>Итоговая стоимость</div>
+            <span id="total-cart-price">
+                {% if total_cart_price != 0 %}
+                    {{ total_cart_price|format_price }}
+                {% else %}
+                    По запросу
+                {% endif %}
+            </span>
+        </div>
+        <a href="{% url 'place-order' %}">
+            <button>Перейти к оформлению</button>
+        </a>
+    </div>
+    {% endif %}
+</main>
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let updateTimer;
+
+        function updateCart(productId, quantity, action = 'set') {
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(() => {
+                const url = new URL('/update-cart/', window.location.origin);
+                url.searchParams.append('product_id', productId);
+                url.searchParams.append('action', action);
+                url.searchParams.append('quantity', quantity);
+
+                fetch(url.toString(), { 
+                    cache: "no-store" 
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error("Ошибка обновления корзины:", error));
+            }, 300); // Небольшая задержка перед отправкой
+        }
+
+        document.querySelectorAll(".quantity-input").forEach(input => {
+            input.addEventListener("change", function() {
+                const productId = this.dataset.productId;
+                const newQuantity = parseInt(this.value) || 0;
+                
+                // Если ввели 0 - удаляем товар
+                const action = newQuantity === 0 ? 'remove' : 'set';
+                
+                updateCart(productId, newQuantity, action);
+            });
+        });
+
+        document.querySelectorAll(".remove-item").forEach(button => {
+            button.addEventListener("click", function() {
+                const productId = this.dataset.productId;
+                updateCart(productId, 0, "remove");
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

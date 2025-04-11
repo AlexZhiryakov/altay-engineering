@@ -1,0 +1,76 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'products/weldingMachines.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Комплектующие</span>
+</nav>
+<main>
+    <h1>Комплектующие</h1>
+    <div class="catalog">
+        <div class="allProducts">
+            <div class="product">
+                <a href="{% url 'electorate' %}">
+                    <img id="electr" src="{% static 'img/Электроторцеватель.jpg' %}" alt="Электроторцеватели" >
+                    <p>Электроторцеватели</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'electricHeater' %}">
+                    <img id="flange-adapters" src="{% static 'img/Электронагреватель.jpg' %}" alt="Электронагреватели" >
+                    <p>Электронагреватели</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'earbuds' %}">
+                    <img id="flange-adapters" src="{% static 'img/Комплектующие.jpg' %}" alt="Вкладыши" >
+                    <p>Вкладыши</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'scanner' %}">
+                    <img id="flange-adapters" src="{% static 'img/Сканер.jpg' %}" alt="Сканер" >
+                    <p>Сканер</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'centralizersPipeWelding' %}">
+                    <img id="flange-adapters" src="{% static 'img/Центраторы.jpg' %}" alt="Центраторы" >
+                    <p>Центраторы</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll('h1, .product');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Отключаем слежку после появления элемента
+                }
+            });
+        }, {
+            threshold: 0.2 // Чем меньше значение, тем раньше появится элемент
+        });
+
+        elements.forEach(element => {
+            element.classList.add('fade-in-scroll'); // Добавляем класс анимации
+            observer.observe(element);
+        });
+    });
+</script>
+{% endblock %}

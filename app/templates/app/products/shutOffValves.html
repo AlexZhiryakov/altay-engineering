@@ -1,0 +1,58 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'products/weldingMachines.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Запорные арматуры</span>
+</nav>
+<main>
+    <h1>Запорные арматуры</h1>
+    <div class="catalog">
+        <div class="allProducts">
+            <div class="product">
+                <a href="{% url 'shut-off-valves/flange' %}">
+                    <img id="flange" src="{% static 'img/Фланец.png' %}" alt="Фланец" >
+                    <p>Фланец</p>
+                </a>
+            </div>
+            <div class="product">
+                <a href="{% url 'shut-off-valves/flange-adapters' %}">
+                    <img id="flange-adapters" src="{% static 'img/Фланцевый_адаптер.png' %}" alt="Фланцевые адаптеры" >
+                    <p>Фланцевые адаптеры</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll('h1, .product');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Отключаем слежку после появления элемента
+                }
+            });
+        }, {
+            threshold: 0.2 // Чем меньше значение, тем раньше появится элемент
+        });
+
+        elements.forEach(element => {
+            element.classList.add('fade-in-scroll'); // Добавляем класс анимации
+            observer.observe(element);
+        });
+    });
+</script>
+{% endblock %}

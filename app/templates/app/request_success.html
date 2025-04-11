@@ -1,0 +1,32 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'request_success.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Заявка принята</span>
+</nav>
+
+<main>
+    <h1>Ваша заявка успешно оформлена!</h1>
+    
+    <div class="success-message">
+        <p>Номер вашей заявки: <strong>#{{ request.id }}</strong></p>
+        <p>Мы свяжемся с вами в ближайшее время для подтверждения.</p>
+        
+        {% if request.has_price_request_items %}
+        <div class="notice">
+            <p>Обратите внимание, что в вашей заявке есть товары с ценой по запросу.</p>
+        </div>
+        {% endif %}
+        
+        <a href="{% url 'mainPage' %}" class="back-button">Вернуться на главную</a>
+    </div>
+</main>
+{% endblock %}

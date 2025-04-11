@@ -1,0 +1,197 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'products/product_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="#" onclick="history.back()">{{ product.category }}</a>
+    <div>/</div>
+    <span>{{ product.name }}</span>
+</nav>
+<main>
+    <div class="firstColumn">
+        <h1>{{ product.name }}</h1>
+        {% if product.price %}
+            <p><strong>{{ product.price|format_price }}</strong></p>
+        {% elif product.price_string %}
+            <p><strong>{{ product.price_string }}</strong></p>
+        {% else %}
+            <p><strong>По запросу</strong></p>
+        {% endif %}
+
+        <div class="blockWithButton">
+            <button class="add-to-cart cart-btn {% if product.id|stringformat:"s" in request.session.cart %}in-cart{% endif %}" 
+                    data-product-id="{{ product.id }}">
+                В КОРЗИНУ
+            </button>
+        </div>
+
+        {% if product.category.name in "Литые фитинги,Электросварные фитинги" %}
+            <div class="diameter-selector">
+                <h3>Диаметры</h3>
+                <div class="diameter-buttons">
+                    {% for diameter in product.diameters.all %}
+                        <button class="diameter-button" data-diameter="{{ diameter.diameter }}">
+                            {{ diameter.diameter }}
+                        </button>
+                    {% endfor %}
+                </div>
+                <p>Диаметры и количество товаров уточняются после оформления заказа.</p>
+            </div>
+        {% else %}
+            <div class="tabs">
+                {% if product.description %}
+                    <button class="tab-button active" onclick="openTab('description')">Описание</button>
+                {% endif %}
+                <button class="tab-button" onclick="openTab('characteristics')">Характеристики</button>
+            </div>
+            
+            <div id="description" class="tab-content active">
+                <p>{{ product.description|safe }}</p>
+            </div>
+            
+            <div id="characteristics" class="tab-content">
+                {% for field, label in characteristics.items %}
+                    {% with product|getattr_safe:field as value %}
+                        {% if value and value != "Не указано" %}
+                            <div class="str">
+                                <p>{{ label }}</p>
+                                <span>{{ value|replace_with_br }}</span>
+                            </div>
+                            <span class="line"></span>
+                        {% endif %}
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {% if product.images.count > 0 %}
+    <div class="secondColumn">
+        <div class="product-images">
+            {% if product.images.count > 1 %}
+                <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
+            {% endif %}
+            <div class="image-container">
+                {% for image in product.images.all %}
+                    <img class="slide" src="{{ image.image.url }}" alt="{{ product.name }}">
+                {% endfor %}
+            </div>
+            {% if product.images.count > 1 %}
+                <button class="next" onclick="changeSlide(1)">&#10095;</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</main>
+
+<script>
+let currentSlide = 0;
+let slides = document.querySelectorAll('.slide');
+
+function showSlide(index) {
+    slides.forEach(slide => {
+        slide.style.opacity = '0';
+        setTimeout(() => slide.classList.remove('active'), 200);
+    });
+
+    setTimeout(() => {
+        slides[index].classList.add('active');
+        slides[index].style.opacity = '1';
+    }, 500);
+}
+
+function changeSlide(direction) {
+    currentSlide += direction;
+    if (currentSlide >= slides.length) {
+        currentSlide = 0;
+    } else if (currentSlide < 0) {
+        currentSlide = slides.length - 1;
+    }
+    showSlide(currentSlide);
+}
+
+if (slides.length > 0) {
+    slides[0].classList.add('active');
+    slides[0].style.opacity = '1';
+}
+
+function openTab(tabId) {
+    let contents = document.querySelectorAll('.tab-content');
+    let buttons = document.querySelectorAll('.tab-button');
+    
+    contents.forEach(content => content.classList.remove('active'));
+    buttons.forEach(button => button.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector([onclick="openTab('${tabId}')"]).classList.add('active');
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const productImages = document.querySelector('.product-images');
+    const slides = document.querySelectorAll('.slide');
+
+    if (slides.length === 1) {
+        productImages.classList.add('single-image');
+    }
+});
+
+document.getElementById('dimensions').innerHTML = document.getElementById('dimensions').innerText.replace(/ /g, '<br>');
+</script>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll('.firstColumn, .secondColumn');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.2
+        });
+
+        elements.forEach(element => {
+            element.classList.add('fade-in-scroll');
+            observer.observe(element);
+        });
+
+        // Унифицированный код для добавления в корзину
+        document.querySelectorAll(".cart-btn").forEach(button => {
+            button.addEventListener("click", function() {
+                const productId = this.dataset.productId;
+                
+                fetch(`/add-to-cart?product_id=${productId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.in_cart) {
+                            this.classList.add("in-cart");
+                        } else {
+                            this.classList.remove("in-cart");
+                        }
+                        
+                        // Обновляем все кнопки этого товара на странице
+                        document.querySelectorAll(`.cart-btn[data-product-id="${productId}"]`).forEach(btn => {
+                            if (data.in_cart) {
+                                btn.classList.add("in-cart");
+                            } else {
+                                btn.classList.remove("in-cart");
+                            }
+                        });
+                    })
+                    .catch(error => console.error("Ошибка:", error));
+            });
+        });
+    });
+</script>
+{% endblock %}
