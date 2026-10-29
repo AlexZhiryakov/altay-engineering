@@ -1,0 +1,45 @@
+main {
+    padding: 2vw 15vw 5vw 15vw;
+
+    h1 {
+        font-weight: 100;
+    }
+
+    .success-message {
+        margin: 2rem 0;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 0.5vw;
+        text-align: center;
+    }
+    
+    .notice {
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: #fff8e1;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .back-button {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.75rem 1.5rem;
+        background: #000;
+        color: white;
+        text-decoration: none;
+        border-radius: 0.5vw;
+        transition: background-color 0.3s;
+
+        @media (max-width: 700px) {
+            border-radius: 1vw;
+        }
+    }
+    
+    .back-button:hover {
+        background-color: #333;
+    }
+
+    @media (max-width: 1200px) {
+        padding: 2vw 20px 5vw 20px;
+    }
+}

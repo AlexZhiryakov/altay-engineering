@@ -1,0 +1,17 @@
+main {
+    padding: 2vw 15vw 5vw 15vw;
+
+    h1 {
+        font-weight: 100;
+    }
+
+    .aboutCompany {
+        p {
+            margin-top: 2vw;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        padding: 2vw 20px 5vw 20px;
+    }
+}

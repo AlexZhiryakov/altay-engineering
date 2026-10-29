@@ -1,0 +1,41 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block style %}
+    <link rel="stylesheet" href="{% static 'privacyPolicy.css' %}">
+    <link rel="stylesheet" href="{% static 'location.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <a href="{% url 'mainPage' %}">Главная</a>
+    <div>/</div>
+    <span>Политика cookies</span>
+</nav>
+<main class="legal-page">
+    <h1>Политика использования cookies</h1>
+
+    <h2>1. Какие cookies есть</h2>
+    <p>Сайт ставит только необходимые cookies Django:</p>
+    <ul>
+        <li><code>sessionid</code> — корзина заявок и flash-сообщения;</li>
+        <li><code>csrftoken</code> — защита форм от CSRF.</li>
+    </ul>
+    <p>Рекламных, аналитических и маркетинговых cookies нет. Google Analytics, Яндекс.Метрика и пиксели соцсетей не подключены.</p>
+
+    <h2>2. Нужно ли согласие</h2>
+    <p>
+        Для строго необходимых cookies, без которых не работает корзина, отдельное маркетинговое согласие не требуется.
+        Мы всё равно показываем информационный баннер, чтобы было понятно, что используется.
+    </p>
+
+    <h2>3. Сторонние сервисы</h2>
+    <p>
+        Если в окружении задан ключ Яндекс.Карт, браузер загружает скрипт с <code>api-maps.yandex.ru</code>.
+        Это сторонний сервис; на него распространяется политика Яндекса.
+    </p>
+
+    <h2>4. Управление</h2>
+    <p>Вы можете удалить cookies в настройках браузера. После этого корзина очистится.</p>
+</main>
+{% endblock %}

@@ -86,13 +86,10 @@
         function updateCart(productId, quantity, action = 'set') {
             clearTimeout(updateTimer);
             updateTimer = setTimeout(() => {
-                const url = new URL('/update-cart/', window.location.origin);
-                url.searchParams.append('product_id', productId);
-                url.searchParams.append('action', action);
-                url.searchParams.append('quantity', quantity);
-
-                fetch(url.toString(), { 
-                    cache: "no-store" 
+                postForm("/update-cart/", {
+                    product_id: productId,
+                    action: action,
+                    quantity: quantity,
                 })
                 .then(response => response.json())
                 .then(data => {

@@ -1,39 +1,39 @@
-# Виртуальное окружение
-venv/
-.env/
-
-# Файлы IDE
-.idea/
-.vscode/
-
-# Базы данных
-*.sqlite3
-*.db
-
-# Статика и медиа (если используются CDN)
-/static/
-/media/
-
-# Кеш Python
+# Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
 
-# Логи
-*.log
-
-# Файлы окружения
+# Secrets and local env
 .env
-.env.local
+.env.*
+!.env.example
 
-# Beget-специфичные файлы
-*.pyc
+# Databases, dumps, logs
+*.sqlite3
+db.sqlite3
+*.rdb
+dump.rdb
+*.sql
+*.dump
+*.log
+debug.log
+data.json
+
+# Collected static
+staticfiles/
+
+# IDE and OS
+.idea/
+.vscode/
 *.swp
 *.swo
+.DS_Store
+Thumbs.db
 
-# Бэкапы БД (чтобы случайно не залить дампы)
-*.dump
-*.sql
-
-# Логи сервера
-*.error.log
-*.access.log
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

@@ -52,7 +52,7 @@
             </div>
             
             <div id="description" class="tab-content active">
-                <p>{{ product.description|safe }}</p>
+                <p>{{ product.description|linebreaksbr }}</p>
             </div>
             
             <div id="characteristics" class="tab-content">
@@ -129,7 +129,10 @@ function openTab(tabId) {
     buttons.forEach(button => button.classList.remove('active'));
     
     document.getElementById(tabId).classList.add('active');
-    document.querySelector([onclick="openTab('${tabId}')"]).classList.add('active');
+    const activeButton = document.querySelector(`[onclick="openTab('${tabId}')"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -141,7 +144,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-document.getElementById('dimensions').innerHTML = document.getElementById('dimensions').innerText.replace(/ /g, '<br>');
+const dimensions = document.getElementById('dimensions');
+if (dimensions) {
+    dimensions.innerHTML = dimensions.innerText.replace(/ /g, '<br>');
+}
 </script>
 {% endblock %}
 
@@ -171,7 +177,7 @@ document.getElementById('dimensions').innerHTML = document.getElementById('dimen
             button.addEventListener("click", function() {
                 const productId = this.dataset.productId;
                 
-                fetch(`/add-to-cart?product_id=${productId}`)
+                postForm("/add-to-cart", {product_id: productId})
                     .then(response => response.json())
                     .then(data => {
                         if (data.in_cart) {

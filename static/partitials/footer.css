@@ -1,0 +1,164 @@
+footer {
+    padding: 0 15vw;
+    background-color: #333C43;
+    width: 100%;
+    height: auto;
+
+    .upperFooter {
+        nav {
+            display: flex;
+            gap: 3vw;
+
+            ul {
+                padding-left: 0;
+                
+                li {
+                    list-style-type: none;
+                    margin-top: 1vw;
+
+                    span {
+                        color: white;
+                        font-size: 1vw;
+                    }
+
+                    a {
+                        color: #86949F;
+                        font-size: 1vw;
+                        text-decoration: none;
+    
+                        &:hover {
+                            color: white;
+                            transition: all 0.2s ease-in-out;
+                        }
+                    }
+                }
+
+                .desktopLi {
+                    width: 17.5vw;
+                }
+
+                ul {
+                    display: flex;
+
+                    li {
+                        margin-right: 1vw;
+                        a {
+                            img {
+                                width: 2vw;
+                                height: 2vw;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .lowerFooter {
+        display: flex;
+        padding-top: 3vw;
+        padding-bottom: 1vw;
+
+        div {
+            color: #86949F;
+        }
+
+        a {
+            margin-left: 10vw;
+            text-decoration: none;
+            color: #86949F;
+            
+            &:hover {
+                color: white;
+                transition: all 0.2s ease-in-out;
+            }
+
+            @media (max-width: 1200px) {
+                margin-left: 0vw;
+                margin-top: 2vw;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            padding: 6vw 20px 4vw 20px;
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    .desktop {
+        display: block;
+
+        @media (max-width: 1200px) {
+            display: none;
+        }
+    }
+
+    .mobile {
+        display: none;
+
+        @media (max-width: 1200px) {
+            display: block;
+
+            .upperFooter {
+                flex-direction: column;
+
+                nav {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0;
+
+                    .footer-section {
+                        padding-left: 20px;
+                        border-left: none;
+                        border-right: none;
+                        border-radius: 0;
+
+                        li {
+                            margin-top: 3.5vw;
+
+                            .footer-links {
+                                flex-direction: column;
+                                margin-top: 20px;
+                                max-height: 0;
+                                overflow: hidden;
+                                opacity: 0;
+                                transition: max-height 0.4s ease-out, opacity 0.4s ease-out;
+        
+                                li {
+                                    margin-bottom: 2vw;
+                                }
+                                
+                                li a {
+                                    font-size: 19px;
+                                }
+        
+                                &.active {
+                                    max-height: 600px;
+                                    opacity: 1;
+                                }
+                            }
+        
+                            .mobile-toggle {
+                                cursor: pointer;
+                                color: white;
+                                font-size: 17px;
+                            }
+                        }
+
+                        li a {
+                            font-size: 17px;
+                        }
+                    }
+                    .line {
+                        border-bottom: 0.05vw solid rgba(255, 255, 255, 0.3);
+                    }
+                }
+            }
+        }
+    }
+
+    @media (max-width: 1200px) {
+        padding: 0
+    }
+}

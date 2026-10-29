@@ -1,0 +1,50 @@
+main {
+    padding: 2vw 15vw 5vw 15vw;
+
+    h1 {
+        font-weight: 100;
+    }
+
+    .card {
+        display: flex;
+        flex-direction: column;
+        padding-top: 2vw;
+
+        .string {
+            display: flex;
+            align-items: center;
+            padding: 0.5vw 0;
+
+            p {
+                width: 50%;
+                font-size: 16px;
+            }
+
+            .name {
+                margin-right: 1vw;
+            }
+        }
+
+        span {
+            border: 0.01vw solid #efefef;
+            width: 100%;
+        }
+    }
+
+    .download_block {
+        margin-top: 3vw;
+
+        .download {
+            font-size: 16px;
+            text-decoration: none;
+            color: #0065A9;
+            border: 0.05vw solid #86949F;
+            border-radius: 1vw;
+            padding: 1vw 2vw;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        padding: 2vw 20px 5vw 20px;
+    }
+}

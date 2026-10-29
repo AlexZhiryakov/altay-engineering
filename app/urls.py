@@ -1,9 +1,6 @@
 from django.urls import path
+
 from . import views
-from django.conf import settings
-from django.conf.urls.static import static
-
-
 
 urlpatterns = [
     path('', views.mainPage, name='mainPage'),
@@ -12,8 +9,11 @@ urlpatterns = [
     path('download/', views.download_file, name='download_file'),
 
     # Вкладки на сайте
-    # Политика конфиденциальности
+    # Юридические страницы
     path('privacy-policy', views.privacyPolicy, name='privacy-policy'),
+    path('terms-of-use', views.termsOfUse, name='terms-of-use'),
+    path('cookie-policy', views.cookiePolicy, name='cookie-policy'),
+    path('refund-policy', views.refundPolicy, name='refund-policy'),
 
     # Компания
 
@@ -121,6 +121,3 @@ urlpatterns = [
 
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

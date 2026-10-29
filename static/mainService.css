@@ -1,0 +1,118 @@
+.service {
+    margin-top: 3vw;
+    padding: 2vw 15vw 2vw 15vw;
+    background-color: #efefef;
+
+    h2 {
+        font-weight: 100;
+        margin: 0;
+    }
+
+    .allServices {
+        display: grid;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1vw;
+        margin-top: 2vw;
+
+        .block {
+            padding: 0.5vw 0;
+
+            a {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-decoration: none;
+
+                img {
+                    width: 150px;
+                    height: auto;
+                }
+
+                #repair {
+                    width: 128px;
+                    margin-top: 8px;
+                    margin-bottom: 13px;
+                }
+
+                p {
+                    color: black;
+                    text-align: center;
+                    margin: 0.5vw 2vw 1vw 2vw;
+
+                    @media (max-width: 1200px) {
+                        margin: 0.5vw 2vw 2vw 2vw;
+                    }
+
+                    @media (max-width: 800px) {
+                        margin: 0.5vw 2vw 3vw 2vw;
+                    }
+
+                    @media (max-width: 500px) {
+                        margin: 0.5vw 2vw 4vw 2vw;
+                    }
+                }
+
+                button {
+                    display: none;
+
+                    @media (max-width: 1000px) {
+                        display: block;
+                        background-color: black;
+                        color: white;
+                        padding: 10px 20px;
+                        border-radius: 1vw;
+                        border: 0.05vw solid black;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: background-color 0.3s;
+                        width: 50%;
+                        
+                        &:hover {
+                            background-color: white;
+                            color: black;
+                        }
+
+                        @media (max-width: 700px) {
+                            width: 100%;
+                        }
+                    }
+                }
+            }
+
+            @media (max-width: 1200px) {
+                padding: 1.5vw 0 0.5vw 0;
+            }
+
+            @media (max-width: 700px) {
+                padding: 2vw 0 0.5vw 0;
+            }
+        }
+
+        #block {
+            @media (max-width: 1000px) {
+                margin-top: 25px;
+            }
+        }
+
+    @media (max-width: 1000px) {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    @media (min-width: 1001px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    }
+
+    @media (max-width: 1200px) {
+        margin-top: 5vw;
+        padding: 40px 20px 40px 20px;
+    }
+
+    @media (max-width: 700px) {
+        padding: 40px 20px 45px 20px;
+    }
+
+    @media (max-width: 700px) {
+        margin-top: 8vw;
+    }
+}

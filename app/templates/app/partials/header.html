@@ -2,7 +2,7 @@
 
 <header>
     <a href="{% url 'mainPage' %}">
-        <img src="{% static 'img/лого_алтай_инжиниринг.jpg' %}" alt="Логотип компании Алтай Инжиниринг" >
+        <img src="{% static 'img/лого_алтай_инжиниринг.jpg' %}" alt="Логотип {{ site.brand_name }}" >
     </a>
     <div class="menu">
         <input type="checkbox" id="burger-checkbox" class="burger-checkbox">
@@ -18,26 +18,26 @@
                 </a>
             </li>
             <li><a href="{% url 'mainPage' %}" class="menu-item">Главная</a></li>
-            <li><a href="#" class="menu-item">Компания</a><li>
+            <li><a href="#" class="menu-item">Компания</a></li>
                 <li><a href="{% url 'company/aboutCompany' %}" id="point" class="menu-item">О компании</a></li>
                 <li><a href="{% url 'company/details' %}" id="point" class="menu-item">Реквизиты</a></li>
-            <li><a href="#" class="menu-item">Каталог</a><li>
+            <li><a href="#" class="menu-item">Каталог</a></li>
                 <li><a href="{% url 'welding-machines' %}" id="point" class="menu-item">Сварочные аппараты</a></li>
                 <li><a href="{% url 'components' %}" id="point" class="menu-item">Комплектующие</a></li>
                 <li><a href="{% url 'additional' %}" id="point" class="menu-item">Дополнительное оборудование</a></li>
                 <li><a href="{% url 'fitting' %}" id="point" class="menu-item">Фитинги</a></li>
                 <li><a href="{% url 'pipes' %}" id="point" class="menu-item">Трубы ПНД</a></li>
                 <li><a href="{% url 'shut-off-valves' %}" id="point" class="menu-item">Запорные арматуры</a></li>
-            <li><a href="#" class="menu-item">Услуги</a><li>
+            <li><a href="#" class="menu-item">Услуги</a></li>
                 <li><a href="{% url 'rental-welding-equipment' %}" id="point" class="menu-item">Аренда сварочных аппаратов</a></li>
                 <li><a href="{% url 'repair-welding-equipment' %}" id="point" class="menu-item">Ремонт сварочных аппаратов</a></li>
                 <li><a href="{% url 'pipeline-installation' %}" id="point" class="menu-item">Монтаж трубопровода</a></li>
-            <li><a href="tel:+79059267509" class="menu-item" id="socials" aria-label="Позвонить по номеру +7(905) 926 75 09" target="_blank">+7(905) 926 75 09</a></li>
-            <li><a href="tel:+79130258069" class="menu-item" aria-label="Позвонить по номеру +7(913) 025 80 69" target="_blank">+7(913) 025 80 69</a></li>
+            <li><a href="tel:{{ site.phone_primary_tel }}" class="menu-item" id="socials" aria-label="Позвонить по номеру {{ site.phone_primary }}">{{ site.phone_primary }}</a></li>
+            <li><a href="tel:{{ site.phone_secondary_tel }}" class="menu-item" aria-label="Позвонить по номеру {{ site.phone_secondary }}">{{ site.phone_secondary }}</a></li>
             <ul>
-                <li><a href="https://wa.me/79059267509" class="menu-item" rel="nofollow" aria-label="Написать в WhatsApp" target="_blank"><img src="{% static 'img/WhatsApp.png' %}" alt="WhatsApp" /></a></li>
-                <li><a href="https://t.me/neqvit" class="menu-item" rel="nofollow" aria-label="Написать в Telegram" target="_blank"><img src="{% static 'img/Telegram.png' %}" alt="Telegram" /></a></li>
-                <li><a href="mailto:Altay-engineering@yandex.ru" class="menu-item" rel="nofollow" aria-label="Написать на почту" target="_blank"><img src="{% static 'img/Email.png' %}" alt="Email" /></a></li>
+                <li><a href="{{ site.whatsapp_url }}" class="menu-item" rel="nofollow noopener" aria-label="Написать в WhatsApp" target="_blank"><img src="{% static 'img/WhatsApp.png' %}" alt="WhatsApp" width="32" height="32" /></a></li>
+                <li><a href="{{ site.telegram_url }}" class="menu-item" rel="nofollow noopener" aria-label="Написать в Telegram" target="_blank"><img src="{% static 'img/Telegram.png' %}" alt="Telegram" width="32" height="32" /></a></li>
+                <li><a href="{{ site.mailto }}" class="menu-item" rel="nofollow" aria-label="Написать на почту"><img src="{% static 'img/Email.png' %}" alt="Email" width="32" height="32" /></a></li>
             </ul>
         </ul>
     </nav>
@@ -45,10 +45,10 @@
     <nav>
         <div class="block">
         <ul class="ulTopNav">
-            <li><a href="https://wa.me/79059267509" rel="nofollow" aria-label="Написать в WhatsApp" target="_blank"><img src="{% static 'img/WhatsApp.png' %}" alt="WhatsApp" /></a></li>
-            <li><a href="https://t.me/neqvit" rel="nofollow" aria-label="Написать в Telegram" target="_blank"><img src="{% static 'img/Telegram.png' %}" alt="Telegram" /></a></li>
-            <li><a href="mailto:Altay-engineering@yandex.ru" rel="nofollow" aria-label="Написать на почту" target="_blank">Altay-engineering@yandex.ru</a></li>
-            <li><a href="tel:+79059267509" id="socials" aria-label="Позвонить по номеру +7(905) 926 75 09" target="_blank">+7(905) 926 75 09</a></li>
+            <li><a href="{{ site.whatsapp_url }}" rel="nofollow noopener" aria-label="Написать в WhatsApp" target="_blank"><img src="{% static 'img/WhatsApp.png' %}" alt="WhatsApp" width="32" height="32" /></a></li>
+            <li><a href="{{ site.telegram_url }}" rel="nofollow noopener" aria-label="Написать в Telegram" target="_blank"><img src="{% static 'img/Telegram.png' %}" alt="Telegram" width="32" height="32" /></a></li>
+            <li><a href="{{ site.mailto }}" rel="nofollow" aria-label="Написать на почту">{{ site.email }}</a></li>
+            <li><a href="tel:{{ site.phone_primary_tel }}" id="socials" aria-label="Позвонить по номеру {{ site.phone_primary }}">{{ site.phone_primary }}</a></li>
         </ul>
         <ul class="ulBottomNav" id="mainNav">
             <ul>
@@ -78,15 +78,15 @@
                     <li><a href="{% url 'pipeline-installation' %}">Монтаж трубопровода</a></li>
                 </ul>
             </li>
-            </ul>
-            <li class="bag">
+            <li>
                 <a class="cart_count" href="{% url 'shopping-cart' %}">
-                    <img src="{% static 'img/корзина.png' %}" alt="Корзина товаров" >
+                    <img src="{% static 'img/корзина.png' %}" alt="Корзина">
                     {% if cart_count != 0 %}
                         <div id="cart-count">{{ cart_count }}</div>
                     {% endif %}
                 </a>
             </li>
+            </ul>
         </ul>
         </div>
     </nav>

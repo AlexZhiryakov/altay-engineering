@@ -17,10 +17,10 @@
     <h1>Ваша заявка успешно оформлена!</h1>
     
     <div class="success-message">
-        <p>Номер вашей заявки: <strong>#{{ request.id }}</strong></p>
-        <p>Мы свяжемся с вами в ближайшее время для подтверждения.</p>
+        <p>Номер вашей заявки: <strong>#{{ order.id }}</strong></p>
+        <p>Заявка сохранена в базе демо-проекта. Это pet-проект: менеджер на сайте не отвечает вживую.</p>
         
-        {% if request.has_price_request_items %}
+        {% if order.has_price_request_items %}
         <div class="notice">
             <p>Обратите внимание, что в вашей заявке есть товары с ценой по запросу.</p>
         </div>

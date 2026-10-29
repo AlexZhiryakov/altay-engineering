@@ -136,7 +136,7 @@
         document.querySelectorAll(".cart-btn").forEach(btn => {
             btn.addEventListener("click", function() {
                 const productId = this.dataset.productId;
-                fetch(`/add-to-cart?product_id=${productId}`)
+                postForm("/add-to-cart", {product_id: productId})
                     .then(response => response.json())
                     .then(data => {
                         this.classList.toggle("in-cart", data.in_cart);

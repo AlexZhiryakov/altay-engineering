@@ -1,0 +1,101 @@
+main {
+    padding: 2vw 15vw 5vw 15vw;
+
+    h1 {
+        font-weight: 100;
+    }
+
+    .catalog {
+        margin-top: 3vw;
+    
+        .allProducts {
+            display: grid;
+            gap: 1vw;
+    
+            .product {
+                border: 0.05vw solid  #efefef;
+                border-radius: 0.5vw;
+    
+                a {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-decoration: none;
+    
+                    img {
+                        width: 200px;
+                        height: auto;
+                    }
+
+                    #castFittings {
+                        width: 170px;
+                        margin-top: 5px;
+                        margin-bottom: 20px;
+                    }
+
+                    #gasPipes {
+                        width: 180px;
+                        margin-top: 25px;
+                        margin-bottom: 15px;
+                    }
+
+                    #flange {
+                        width: 180px;
+                    }
+
+                    #flange-adapters {
+                        width: 270px;
+                    }
+
+                    #electr {
+                        width: 269px;
+                    }
+    
+                    p {
+                        color: black;
+                        text-align: center;
+                        margin: 0.5vw 2vw 1vw 2vw;
+    
+                        @media (max-width: 1200px) {
+                            margin: 0.5vw 2vw 2vw 2vw;
+                        }
+    
+                        @media (max-width: 800px) {
+                            margin: 0.5vw 2vw 3vw 2vw;
+                        }
+    
+                        @media (max-width: 500px) {
+                            margin: 0.5vw 2vw 4vw 2vw;
+                        }
+                    }
+                }
+    
+                @media (max-width: 700px) {
+                    border-radius: 1vw;
+                }
+            }
+    
+        @media (max-width: 1400px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        @media (max-width: 700px) {
+            grid-template-columns: repeat(1, 1fr);
+        }
+        @media (min-width: 1401px) {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        }
+    
+        @media (max-width: 1200px) {
+            margin-top: 5vw;
+        }
+    
+        @media (max-width: 700px) {
+            margin-top: 8vw;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        padding: 2vw 20px 5vw 20px;
+    }
+}

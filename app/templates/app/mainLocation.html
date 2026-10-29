@@ -4,20 +4,24 @@
     <div class="locationInformation">
         <div class="officeColumn">
             <strong>ОФИС</strong>
-            <p>г.Барнаул, ул.Сиреневая, 23к1</p>
+            <p>{{ site.office_full }}</p>
             <div>
                 <span>РЕЖИМ РАБОТЫ</span>
-                <span>Пн.–Пт.: с 9:00 до 18:00</span>
+                <span>{{ site.work_hours }}</span>
             </div>
         </div>
         <div class="warehouseColumn">
             <strong>СКЛАД</strong>
-            <p>г.Барнаул, проспект Космонавтов, 8/29</p>
+            <p>{{ site.warehouse_full }}</p>
             <div>
                 <span>РЕЖИМ РАБОТЫ</span>
-                <span>Пн.–Пт.: с 9:00 до 18:00</span>
+                <span>{{ site.work_hours }}</span>
             </div>
         </div>
     </div>
-    <div id="map"></div>
+    {% if yandex_maps_api_key %}
+    <div id="map" aria-label="Карта с метками офиса и склада"></div>
+    {% else %}
+    <p class="map-fallback">Карта появится после указания YANDEX_MAPS_API_KEY в .env. Адреса выше — демонстрационные.</p>
+    {% endif %}
 </div>

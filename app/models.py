@@ -1,6 +1,7 @@
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 from django.utils import timezone
+
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True, verbose_name="Название категории")
@@ -19,7 +20,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products", verbose_name="Категория")
     name = models.CharField(max_length=255, verbose_name="Название")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", null=True, blank=True)
-    description = models.TextField(verbose_name="Описание", max_length=1000, null=True, blank=True)
+    description = models.TextField(verbose_name="Описание", max_length=8000, null=True, blank=True)
     
     # Характеристики
     form = models.CharField(max_length=30, verbose_name="Форма", default='', blank=True)
@@ -82,66 +83,67 @@ class Product(models.Model):
     supply_voltage = models.CharField(max_length=50, verbose_name="Напряжение питания, В/Гц", default='', blank=True)
 
 
-    def get_characteristics(self):
-        """Возвращает словарь с характеристиками товара, исключая пустые значения."""
-        characteristics = {}
-        fields = [
-            ("form", "Форма"),
-            ("material", "Материал"),
-            ("conditional_passage", "Условный проход, Ду"),
-            ("conditional_pressure", "Условное давление, кгс/см2"),
-            ("working_environment", "Рабочая среда"),
-            ("working_temperature", "Температура рабочей среды, °С"),
-            ("weight", "Вес"),
-            ("shipment", "Отгрузка"),
-            ("manufacturer", "Производитель"),
-            ("pipe_diameter", "Диаметр трубы, мм"),
-            ("wall_thickness", "Толщина стенки, мм"),
-            ("availability", "Наличие"),
-            ("menu_language", "Язык меню"),
-            ("battery_life", "Время автономной работы"),
-            ("food_type", "Тип питания"),
-            ("display", "Дисплей"),
-            ("memory_capacity", "Объем памяти"),
-            ("data_storage", "Накопитель данных"),
-            ("pressure_sensor_support", "Поддержка датчиков давления"),
-            ("temperature_sensor_support", "Поддержка датчиков температуры"),
-            ("length_sensor_wires", "Длина проводов датчиков"),
-            ("operating_temp", "Рабочая температура, °C"),
-            ("protection_class", "Класс защиты"),
-            ("dimensions", "Транспортировочные габариты, мм"),
-            ("packaging_type", "Вид упаковки"),
-            ("output_current", "Выходной ток, А"),
-            ("output_voltage", "Выходное напряжение, В"),
-            ("operating_temperature", "Рабочая температура, °C"),
-            ("welding_range", "Диапазон сварки, мм"),
-            ("earbuds", "Вкладыши, мм"),
-            ("clamp_count", "Количество зажимов"),
-            ("heating_time", "Время нагрева, мин"),
-            ("logging_function", "Функция протоколирования"),
-            ("protocol_export", "Выгрузка протоколов"),
-            ("data_input", "Ввод данных"),
-            ("welding_time", "Время сварки, сек"),
-            ("protocol_count", "Количество протоколов в памяти, шт"),
-            ("power", "Мощность, Вт"),
-            ("current_consumption", "Потребляемый ток, А"),
-            ("trimmer_power", "Мощность торцевателя, Вт"),
-            ("heater_power", "Мощность нагревателя, Вт"),
-            ("net_weight", "Масса нетто/брутто, кг"),
-            ("hydraulic_power", "Мощность двигателя гидростанции, Вт"),
-            ("total_power_consumption", "Общая потребляемая мощность, Вт"),
-            ("max_pressure", "Максимальное давление, бар"),
-            ("cylinder_area", "Площадь сечения цилиндров, см²"),
-            ("warranty", "Гарантия, лет"),
-            ("supply_voltage", "Напряжение питания, В/Гц"),
-        ]
+    # (поле модели, подпись в каталоге). Пустые значения в карточку не попадают.
+    CHARACTERISTIC_FIELDS = (
+        ("form", "Форма"),
+        ("material", "Материал"),
+        ("conditional_passage", "Условный проход, Ду"),
+        ("conditional_pressure", "Условное давление, кгс/см2"),
+        ("working_environment", "Рабочая среда"),
+        ("working_temperature", "Температура рабочей среды, °С"),
+        ("weight", "Вес"),
+        ("shipment", "Отгрузка"),
+        ("manufacturer", "Производитель"),
+        ("pipe_diameter", "Диаметр трубы, мм"),
+        ("wall_thickness", "Толщина стенки, мм"),
+        ("availability", "Наличие"),
+        ("menu_language", "Язык меню"),
+        ("battery_life", "Время автономной работы"),
+        ("food_type", "Тип питания"),
+        ("display", "Дисплей"),
+        ("memory_capacity", "Объем памяти"),
+        ("data_storage", "Накопитель данных"),
+        ("pressure_sensor_support", "Поддержка датчиков давления"),
+        ("temperature_sensor_support", "Поддержка датчиков температуры"),
+        ("length_sensor_wires", "Длина проводов датчиков"),
+        ("operating_temp", "Рабочая температура, °C"),
+        ("protection_class", "Класс защиты"),
+        ("dimensions", "Транспортировочные габариты, мм"),
+        ("packaging_type", "Вид упаковки"),
+        ("output_current", "Выходной ток, А"),
+        ("output_voltage", "Выходное напряжение, В"),
+        ("operating_temperature", "Рабочая температура, °C"),
+        ("welding_range", "Диапазон сварки, мм"),
+        ("drive_type", "Привод"),
+        ("earbuds", "Вкладыши, мм"),
+        ("clamp_count", "Количество зажимов"),
+        ("heating_time", "Время нагрева, мин"),
+        ("logging_function", "Функция протоколирования"),
+        ("protocol_export", "Выгрузка протоколов"),
+        ("data_input", "Ввод данных"),
+        ("welding_time", "Время сварки, сек"),
+        ("protocol_count", "Количество протоколов в памяти, шт"),
+        ("power", "Мощность, Вт"),
+        ("current_consumption", "Потребляемый ток, А"),
+        ("trimmer_power", "Мощность торцевателя, Вт"),
+        ("heater_power", "Мощность нагревателя, Вт"),
+        ("net_weight", "Масса нетто/брутто, кг"),
+        ("hydraulic_power", "Мощность двигателя гидростанции, Вт"),
+        ("total_power_consumption", "Общая потребляемая мощность, Вт"),
+        ("max_pressure", "Максимальное давление, бар"),
+        ("cylinder_area", "Площадь сечения цилиндров, см²"),
+        ("warranty", "Гарантия, лет"),
+        ("supply_voltage", "Напряжение питания, В/Гц"),
+    )
 
-        for field, label in fields:
+    def get_characteristics(self) -> dict[str, str]:
+        """Непустые характеристики товара: имя поля -> подпись для интерфейса."""
+        filled: dict[str, str] = {}
+        for field, label in self.CHARACTERISTIC_FIELDS:
             value = getattr(self, field)
-            if value not in (None, '', []):
-                characteristics[label] = value
-
-        return characteristics
+            if value not in (None, "", []):
+                filled[field] = label
+        return filled
 
 
     def __str__(self):

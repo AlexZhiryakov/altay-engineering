@@ -23,19 +23,22 @@
             <li><span>Компания</span></li>
             <li class="desktopLi"><a href="{% url 'company/aboutCompany' %}">О компании</a></li>
             <li class="desktopLi"><a href="{% url 'company/details' %}">Реквизиты</a></li>
+            <li class="desktopLi"><a href="{% url 'terms-of-use' %}">Условия использования</a></li>
+            <li class="desktopLi"><a href="{% url 'cookie-policy' %}">Политика cookies</a></li>
+            <li class="desktopLi"><a href="{% url 'refund-policy' %}">Политика возврата</a></li>
         </ul>
         <ul>
-            <li class="desktopLi"><a href="tel:+79059267509" id="socials" aria-label="Позвонить по номеру +7(905) 926 75 09" target="_blank">+7(905) 926 75 09</a></li>
-            <li class="desktopLi"><a href="tel:+79130258069" aria-label="Позвонить по номеру +7(913) 025 80 69" target="_blank">+7(913) 025 80 69</a></li>
+            <li class="desktopLi"><a href="tel:{{ site.phone_primary_tel }}" aria-label="Позвонить по номеру {{ site.phone_primary }}">{{ site.phone_primary }}</a></li>
+            <li class="desktopLi"><a href="tel:{{ site.phone_secondary_tel }}" aria-label="Позвонить по номеру {{ site.phone_secondary }}">{{ site.phone_secondary }}</a></li>
             <ul>
-                <li><a href="https://wa.me/79059267509" class="menu-item" rel="nofollow" aria-label="Написать в WhatsApp" target="_blank"><img src="{% static 'img/WhatsApp.png' %}" alt="WhatsApp" /></a></li>
-                <li><a href="https://t.me/neqvit" class="menu-item" rel="nofollow" aria-label="Написать в Telegram" target="_blank"><img src="{% static 'img/Telegram.png' %}" alt="Telegram" /></a></li>
-                <li><a href="mailto:Altay-engineering@yandex.ru" class="menu-item" rel="nofollow" aria-label="Написать на почту" target="_blank"><img src="{% static 'img/Email.png' %}" alt="Email" /></a></li>
+                <li><a href="{{ site.whatsapp_url }}" class="menu-item" rel="nofollow noopener" aria-label="Написать в WhatsApp" target="_blank"><img src="{% static 'img/WhatsApp.png' %}" alt="WhatsApp" /></a></li>
+                <li><a href="{{ site.telegram_url }}" class="menu-item" rel="nofollow noopener" aria-label="Написать в Telegram" target="_blank"><img src="{% static 'img/Telegram.png' %}" alt="Telegram" /></a></li>
+                <li><a href="{{ site.mailto }}" class="menu-item" rel="nofollow" aria-label="Написать на почту"><img src="{% static 'img/Email.png' %}" alt="Email" /></a></li>
             </ul>
         </ul>
         </nav>
         <div class="lowerFooter">
-            <div>© 2023 ООО «АЛТАЙ-ИНЖИНИРИНГ»</div>
+            <div>© {{ site.copyright_year }} {{ site.legal_name }} · pet-проект</div>
             <a href="{% url 'privacy-policy' %}">Политика конфиденциальности</a>
         </div>
     </div>
@@ -74,20 +77,23 @@
                     <ul class="footer-links">
                         <li><a href="{% url 'company/aboutCompany' %}">О компании</a></li>
                         <li><a href="{% url 'company/details' %}">Реквизиты</a></li>
+                        <li><a href="{% url 'terms-of-use' %}">Условия использования</a></li>
+                        <li><a href="{% url 'cookie-policy' %}">Политика cookies</a></li>
+                        <li><a href="{% url 'refund-policy' %}">Политика возврата</a></li>
                     </ul>
                 </li>
             </ul>
             <span class="line"></span>
             <ul class="footer-section">
-                <li><a class="menu-item"  href="tel:+79059267509" id="socials" aria-label="Позвонить по номеру +7(905) 926 75 09" target="_blank">+7(905) 926 75 09</a></li>
-                <li><a class="menu-item" href="tel:+79130258069" aria-label="Позвонить по номеру +7(913) 025 80 69" target="_blank">+7(913) 025 80 69</a></li>
-                <li><a class="menu-item" href="https://wa.me/79059267509" rel="nofollow" aria-label="Написать в WhatsApp" target="_blank">WhatsApp</a></li>
-                <li><a class="menu-item" href="https://t.me/neqvit" rel="nofollow" aria-label="Написать в Telegram" target="_blank">Telegram</a></li></li>
-                <li><a class="menu-item" href="mailto:Altay-engineering@yandex.ru" rel="nofollow" aria-label="Написать на почту" target="_blank">Altay-engineering@yandex.ru</a></li>
+                <li><a class="menu-item" href="tel:{{ site.phone_primary_tel }}" aria-label="Позвонить по номеру {{ site.phone_primary }}">{{ site.phone_primary }}</a></li>
+                <li><a class="menu-item" href="tel:{{ site.phone_secondary_tel }}" aria-label="Позвонить по номеру {{ site.phone_secondary }}">{{ site.phone_secondary }}</a></li>
+                <li><a class="menu-item" href="{{ site.whatsapp_url }}" rel="nofollow noopener" aria-label="Написать в WhatsApp" target="_blank">WhatsApp</a></li>
+                <li><a class="menu-item" href="{{ site.telegram_url }}" rel="nofollow noopener" aria-label="Написать в Telegram" target="_blank">Telegram</a></li>
+                <li><a class="menu-item" href="{{ site.mailto }}" rel="nofollow" aria-label="Написать на почту">{{ site.email }}</a></li>
             </ul>
         </nav>
         <div class="lowerFooter">
-            <div>© 2023 ООО «АЛТАЙ-ИНЖИНИРИНГ»</div>
+            <div>© {{ site.copyright_year }} {{ site.legal_name }} · pet-проект</div>
             <a href="{% url 'privacy-policy' %}">Политика конфиденциальности</a>
         </div>
     </div>

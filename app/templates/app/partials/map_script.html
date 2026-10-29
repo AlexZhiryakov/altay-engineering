@@ -1,0 +1,40 @@
+{% if yandex_maps_api_key %}
+<script type="text/javascript">
+    ymaps.ready(function initMap() {
+        // Яндекс.Карты: порядок [широта, долгота]. Центр — пл. Ленина, Новосибирск.
+        var officeLocation = [55.030204, 82.920430];
+        var warehouseLocation = [55.028980, 82.922850];
+        var centerMap = [55.030204, 82.920430];
+
+        var mapNode = document.getElementById("map");
+        if (!mapNode) {
+            return;
+        }
+
+        var map = new ymaps.Map(mapNode, {
+            center: centerMap,
+            zoom: 15,
+            controls: ["zoomControl", "geolocationControl"]
+        });
+
+        map.geoObjects.add(new ymaps.Placemark(officeLocation, {
+            hintContent: "Офис",
+            balloonContent: "<strong>ОФИС:</strong> {{ site.office_full }}<br><strong>РЕЖИМ РАБОТЫ:</strong> {{ site.work_hours }}"
+        }, {
+            preset: "islands#blueIcon"
+        }));
+
+        map.geoObjects.add(new ymaps.Placemark(warehouseLocation, {
+            hintContent: "Склад",
+            balloonContent: "<strong>СКЛАД:</strong> {{ site.warehouse_full }}<br><strong>РЕЖИМ РАБОТЫ:</strong> {{ site.work_hours }}"
+        }, {
+            preset: "islands#greenIcon"
+        }));
+
+        map.setBounds(map.geoObjects.getBounds(), {
+            checkZoomRange: true,
+            zoomMargin: 40
+        });
+    });
+</script>
+{% endif %}

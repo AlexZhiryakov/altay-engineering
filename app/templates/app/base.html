@@ -1,11 +1,13 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>АЛТАЙ ИНЖИНИРИНГ</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="description" content="{{ site.project_note }}">
+    <title>{{ site.brand_name }} · демо-каталог</title>
     <link rel="icon" href="{% static 'img/лого_алтай_инжиниринг.jpg' %}" type="image/jpg">
     <link rel="stylesheet" href="{% static 'partitials/header.css' %}">
     <link rel="stylesheet" href="{% static 'partitials/footer.css' %}">
@@ -16,14 +18,40 @@
     {% block headerScript %} {% endblock %}
 </head>
 <body>
+    <div class="pet-banner" role="status">
+        {{ site.project_note }}
+    </div>
     <div class="container">
         {% include "app/partials/header.html" %}
-        
+
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
         {% block content %} {% endblock %}
 
         {% include "app/partials/footer.html" %}
     </div>
+
+    {% include "app/partials/cookie_banner.html" %}
+
 <script>
+function postForm(url, params) {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": token ? token.content : "",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams(params),
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const burgerMenu = document.getElementById("burgerMenu");
     const navMenu = document.querySelector("nav");
@@ -40,35 +68,54 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    burgerCheckbox.addEventListener("change", function () {
-        if (this.checked) {
-            body.classList.add("no-scroll");
-        } else {
-            body.classList.remove("no-scroll");
+    if (burgerCheckbox) {
+        burgerCheckbox.addEventListener("change", function () {
+            if (this.checked) {
+                body.classList.add("no-scroll");
+            } else {
+                body.classList.remove("no-scroll");
+            }
+        });
+    }
+
+    if (burgerMenu && navMenu) {
+        burgerMenu.addEventListener("click", function () {
+            burgerMenu.classList.toggle("active");
+            navMenu.classList.toggle("active");
+            if (topNav) topNav.classList.toggle("active");
+            if (bottomNav) bottomNav.classList.toggle("active");
+            document.body.style.overflow = navMenu.classList.contains("active") ? "hidden" : "";
+        });
+
+        navMenu.addEventListener("click", function (event) {
+            if (event.target.tagName === "A") {
+                burgerMenu.classList.remove("active");
+                navMenu.classList.remove("active");
+                if (topNav) topNav.classList.remove("active");
+                if (bottomNav) bottomNav.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        });
+    }
+
+    const cookieBanner = document.getElementById("cookie-banner");
+    const cookieAccept = document.getElementById("cookie-accept");
+    if (cookieBanner && cookieAccept) {
+        try {
+            if (!localStorage.getItem("cookie_notice_accepted")) {
+                cookieBanner.hidden = false;
+            }
+        } catch (e) {
+            cookieBanner.hidden = false;
         }
-    });
-
-    burgerMenu.addEventListener("click", function () {
-        burgerMenu.classList.toggle("active");
-        navMenu.classList.toggle("active");
-        topNav.classList.toggle("active");
-        bottomNav.classList.toggle("active");
-
-        document.body.style.overflow = navMenu.classList.contains("active") ? "hidden" : "";
-    });
-
-    navMenu.addEventListener("click", function (event) {
-        if (event.target.tagName === "A") {
-            burgerMenu.classList.remove("active");
-            navMenu.classList.remove("active");
-            topNav.classList.remove("active");
-            bottomNav.classList.remove("active");
-            document.body.style.overflow = "";
-        }
-    });
+        cookieAccept.addEventListener("click", function () {
+            try {
+                localStorage.setItem("cookie_notice_accepted", "1");
+            } catch (e) {}
+            cookieBanner.hidden = true;
+        });
+    }
 });
-
-
 </script>
 
 {% block script %} {% endblock %}

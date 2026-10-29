@@ -76,18 +76,19 @@
             <textarea id="comment" name="comment" rows="3" maxlength="1000" placeholder="Ваши пожелания"></textarea>
         </div>
         
-        <!-- Добавленный блок с чекбоксом согласия -->
         <div class="consent-checkbox">
             <input type="checkbox" id="privacy-policy" name="privacy_policy" required>
             <label for="privacy-policy">
-                Я согласен на обработку моих персональных данных в соответствии с 
-                <a href="{% url 'privacy-policy' %}">Политикой конфиденциальности</a>
+                Даю согласие на обработку ФИО, телефона и email для рассмотрения этой демо-заявки
+                согласно <a href="{% url 'privacy-policy' %}">политике конфиденциальности</a>
+                и принимаю <a href="{% url 'terms-of-use' %}">условия использования</a>.
+                Понимаю, что сайт — pet-проект и оплату не принимает.
             </label>
         </div>
-        
+
         <div class="form-footer">
-            <p class="required-fields">* Обязательные поля</p>
-            <button type="submit" class="submit-order">Оставить заявку</button>
+            <p class="required-fields">* Обязательные поля. Собираем только имя, телефон, email и комментарий.</p>
+            <button type="submit" class="submit-order">Отправить демо-заявку</button>
         </div>
     </form>
 </main>

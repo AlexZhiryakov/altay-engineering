@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 
-class AppConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'app'
+class CatalogConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "app"
+    verbose_name = "Каталог"

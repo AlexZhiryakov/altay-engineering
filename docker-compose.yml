@@ -1,0 +1,18 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: "change-me-before-a-public-deploy"
+      ALLOWED_HOSTS: "*"
+      CSRF_TRUSTED_ORIGINS: "http://localhost:8000,http://127.0.0.1:8000"
+      DB_ENGINE: sqlite
+      SQLITE_PATH: /app/data/db.sqlite3
+      PORT: "8000"
+    volumes:
+      - sqlite_data:/app/data
+
+volumes:
+  sqlite_data:

@@ -1,0 +1,173 @@
+main {
+    padding: 2vw 15vw 5vw 15vw;
+
+    h1 {
+        font-weight: 100;
+    }
+
+    .cart-items {
+        .cart-item {
+            margin-top: 1vw;
+            border: 0.05vw solid #efefef;
+            border-radius: 1vw;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 35% 65%;
+            align-items: center;
+
+            a {
+                h2 {
+                    @media (max-width: 600px) {
+                        font-size: 18px;
+                    }
+                }
+            }
+
+            p {
+                span {
+                    @media (max-width: 600px) {
+                        font-size: 13px;
+                    }
+                }
+            }
+
+            .quantity-control {
+                    display: inline-flex;
+                    align-items: center;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    overflow: hidden;
+    
+                    .quantity-input {
+                        width: 50px;
+                        height: 36px;
+                        text-align: center;
+                        border: none;
+                        border-left: 1px solid #ddd;
+                        border-right: 1px solid #ddd;
+                        font-size: 16px;
+                        padding: 0 5px;
+                        -moz-appearance: textfield;
+                        appearance: textfield;
+                        
+                        &:focus {
+                            outline: none;
+                            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+                        }
+                        
+                        &::-webkit-outer-spin-button,
+                        &::-webkit-inner-spin-button {
+                            -webkit-appearance: none;
+                            margin: 0;
+                        }
+
+                        @media (max-width: 600px) {
+                            width: 40px;
+                            height: 36px;
+                        }
+                    }
+            }
+
+            img {
+                width: 75%;
+                height: auto;
+            }
+
+            .remove-item {
+                background-color: white;
+                color: black;
+                padding: 10px 30px;
+                border-radius: 0.5vw;
+                border: 0.05vw solid black;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                margin-top: auto;
+                
+                &:hover {
+                    @media (min-width: 601px) {
+                        background-color: black;
+                        color: white;   
+                    }
+                }
+
+                @media (max-width: 1200px) {
+                    padding: 10px 25px;
+                }                    
+                @media (max-width: 700px) {
+                    border-radius: 1vw;
+                } 
+            } 
+            
+            a {
+                color: black;
+                text-decoration: none;
+            }
+
+            @media (max-width: 1200px) {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .quantity-input {
+            -moz-appearance: textfield;
+        }
+    }
+
+    .orderForm {
+        border: 0.05vw solid #efefef;
+        border-radius: 0.5vw;
+        padding: 20px;
+        width: 25vw;
+        margin-top: 1vw;
+        box-sizing: border-box;
+
+        .total-price {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        button {
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 0.5vw;
+            border: 0.05vw solid black;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 1vw;
+            
+            &:hover {
+                background-color: black;
+                color: white;
+            }
+
+            @media (max-width: 1200px) {
+                margin-top: 3vw;
+            }
+            @media (max-width: 600px) {
+                border-radius: 1vw;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            width: 50vw;
+        }
+        @media (max-width: 600px) {
+            width: 100%;
+            padding: 20px 15px;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        padding: 2vw 20px 5vw 20px;
+    }
+}

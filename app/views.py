@@ -1,810 +1,659 @@
-from django.shortcuts import render, get_object_or_404
-from django.conf import settings
-from django.http import FileResponse, HttpResponseNotFound, JsonResponse
-from .models import Category, Product, ProductAttributeValue
-import os
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import Request, RequestItem
-from django.contrib.auth.decorators import login_required
-from app.models import Request
-from django.db.models import Q
-from django.utils import timezone
-import pytz
-from io import BytesIO
-from django.core.mail import EmailMessage
 import logging
+import threading
+from io import BytesIO
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
 from django.conf import settings
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
+from django.core.validators import validate_email
+from django.db.models import Q, QuerySet
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from io import BytesIO
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
 
+from .models import Category, Product, Request, RequestItem
+from .site_info import SITE
+
 logger = logging.getLogger(__name__)
+NOVOSIBIRSK = ZoneInfo("Asia/Novosibirsk")
 
-# Регистрация шрифта (вызывается один раз при старте приложения)
-def register_fonts():
-    try:
-        font_path = os.path.join(settings.BASE_DIR, "static", "fonts", "DejaVuSans.ttf")
-        bold_font_path = os.path.join(settings.BASE_DIR, "static", "fonts", "DejaVuSans-Bold.ttf")
-        
-        # Регистрируем обычное и жирное начертание
-        pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
-        
-        # Если есть отдельный файл для жирного начертания
-        if os.path.exists(bold_font_path):
-            pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', bold_font_path))
-        else:
-            # Если нет отдельного файла, используем обычный шрифт с установкой bold
-            from reportlab.lib.fonts import addMapping
-            pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', font_path))
-            addMapping('DejaVuSans', 0, 1, 'DejaVuSans-Bold')  # normal, bold, italic
-            
-        logger.info("Шрифты DejaVuSans успешно зарегистрированы")
-    except Exception as e:
-        logger.error(f"Ошибка регистрации шрифтов: {e}")
-        # Fallback на стандартные шрифты
-        pdfmetrics.registerFont(TTFont('DejaVuSans', 'Arial'))
-        pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', 'Arial-Bold'))
 
-# Форматирование итоговой стоимости
-def format_price(value):
-    if value is None:
+def register_fonts() -> None:
+    regular = Path(settings.BASE_DIR) / "static" / "fonts" / "DejaVuSans.ttf"
+    bold = Path(settings.BASE_DIR) / "static" / "fonts" / "DejaVuSans-Bold.ttf"
+    if not regular.is_file():
+        raise FileNotFoundError(f"Не найден шрифт {regular}")
+    pdfmetrics.registerFont(TTFont("DejaVuSans", str(regular)))
+    pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", str(bold if bold.is_file() else regular)))
+
+
+def format_price(value) -> str:
+    if value is None or value == "по запросу":
         return "по запросу"
     try:
         return f"{int(value):,}".replace(",", " ") + " ₽"
-    except (ValueError, TypeError):
+    except (TypeError, ValueError):
         return str(value)
 
-# Главная страница
-def mainPage(request):
-    return render(request, 'app/mainPage.html')
 
-# Загрузка файла
-def download_file(request):
-    file_path = os.path.join(settings.MEDIA_ROOT, 'Карточка_ООО_Алтаи-Инжиниринг.pdf')
-    if not os.path.exists(file_path):
-        return HttpResponseNotFound("Файл не найден")
-    return FileResponse(open(file_path, 'rb'), as_attachment=True)
+def mainPage(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/mainPage.html")
 
 
-# Вкладки на сайте
+def download_file(request: HttpRequest) -> HttpResponseNotFound:
+    # Старый PDF с реальными реквизитами бизнеса больше не отдаём.
+    return HttpResponseNotFound("Файл реквизитов недоступен: это демонстрационный pet-проект.")
 
-# Политика конфиденциальности
 
-def privacyPolicy(request):
-    return render(request, 'app/privacyPolicy.html')
+def privacyPolicy(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/privacyPolicy.html")
 
-# Компания
 
-# О компании
-def aboutCompany(request):
-    return render(request, 'app/company/aboutCompany.html')
+def termsOfUse(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/termsOfUse.html")
 
-# Реквизиты
-def companyDetails(request):
-    return render(request, 'app/company/companyDetails.html')
 
-# Корзина
-def shoppingCart(request):
-    cart = request.session.get('cart', {})
-    cart_items = {}
-    total_cart_price = 0
-    
+def cookiePolicy(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/cookiePolicy.html")
+
+
+def refundPolicy(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/refundPolicy.html")
+
+
+def aboutCompany(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/company/aboutCompany.html")
+
+
+def companyDetails(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/company/companyDetails.html")
+
+
+def _products_in_cart(cart: dict) -> tuple[dict[Product, int], float, bool]:
+    cart_items: dict[Product, int] = {}
+    total = 0.0
+    has_price_request = False
     for product_id, quantity in cart.items():
         try:
-            product = Product.objects.get(id=product_id)
-            cart_items[product] = quantity  # Добавляем товар независимо от наличия цены
-            
-            # Считаем общую стоимость только для товаров с ценой
-            if product.price is not None:
-                total_cart_price += product.price * quantity
-        except Product.DoesNotExist:
+            product = Product.objects.prefetch_related("images").get(id=int(product_id))
+            qty = int(quantity)
+        except (Product.DoesNotExist, TypeError, ValueError):
             continue
-    
-    context = {
-        'cart_items': cart_items,  # Все товары, включая те, у которых нет цены
-        'total_cart_price': total_cart_price if cart_items else None
-    }
-    return render(request, 'app/shoppingCart.html', context)
+        cart_items[product] = qty
+        if product.price is not None:
+            total += float(product.price) * qty
+        else:
+            has_price_request = True
+    return cart_items, total, has_price_request
 
-# Добавление в корзину
-def add_to_cart(request):
-    product_id = request.GET.get("product_id")
-    if not product_id:
+
+def shoppingCart(request: HttpRequest) -> HttpResponse:
+    cart_items, total_cart_price, _has_request = _products_in_cart(request.session.get("cart", {}))
+    return render(
+        request,
+        "app/shoppingCart.html",
+        {
+            "cart_items": cart_items,
+            "total_cart_price": total_cart_price if cart_items else None,
+        },
+    )
+
+
+@require_POST
+def add_to_cart(request: HttpRequest) -> JsonResponse:
+    product_id = request.POST.get("product_id")
+    try:
+        product = get_object_or_404(Product, id=int(product_id))
+    except (TypeError, ValueError):
         return JsonResponse({"error": "Нет product_id"}, status=400)
 
     cart = request.session.get("cart", {})
-
-    if product_id in cart:
-        del cart[product_id]  # Удаляем товар, если он уже был добавлен
+    if not isinstance(cart, dict):
+        cart = {}
+    key = str(product.id)
+    if key in cart:
+        del cart[key]
         in_cart = False
     else:
-        cart[product_id] = 1  # Добавляем товар в корзину
+        cart[key] = 1
         in_cart = True
 
-    request.session["cart"] = cart  # Сохраняем обновленную корзину
+    request.session["cart"] = cart
     request.session.modified = True
-
     return JsonResponse({"in_cart": in_cart})
 
-# Обработка количества товаров
-def update_cart(request):
-    product_id = request.GET.get("product_id")
-    action = request.GET.get("action")
-    quantity = request.GET.get("quantity", 1)
 
-    if not product_id:
+@require_POST
+def update_cart(request: HttpRequest) -> JsonResponse:
+    product_id = request.POST.get("product_id")
+    action = request.POST.get("action")
+    try:
+        product = get_object_or_404(Product, id=int(product_id))
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
         return JsonResponse({"error": "Некорректные данные"}, status=400)
 
     cart = request.session.get("cart", {})
-    product = get_object_or_404(Product, id=int(product_id))
+    if not isinstance(cart, dict):
+        cart = {}
+    key = str(product.id)
 
     if action == "set":
-        if int(quantity) == 0:
-            if product_id in cart:
-                del cart[product_id]
+        if quantity <= 0:
+            cart.pop(key, None)
         else:
-            cart[product_id] = max(1, int(quantity))
+            cart[key] = quantity
     elif action == "remove":
-        if product_id in cart:
-            del cart[product_id]
+        cart.pop(key, None)
 
     request.session["cart"] = cart
     request.session.modified = True
 
-    # Пересчитываем общую стоимость только для товаров с ценой
     total_cart_price = 0
     for pid, qty in cart.items():
-        p = Product.objects.get(id=int(pid))
-        if p.price is not None:
-            total_cart_price += p.price * qty
-
-    if product_id not in cart:
-        return JsonResponse({
-            "success": True,
-            "quantity": 0,
-            "total_price": 0,
-            "total_cart_price": total_cart_price
-        })
-
-    total_price = product.price * cart[product_id] if product.price is not None else None
-
-    return JsonResponse({
-        "success": True,
-        "quantity": cart[product_id],
-        "total_price": total_price,
-        "total_cart_price": total_cart_price
-    })
-
-# Оформление заказа
-
-def placeOrder(request):
-    if request.method == 'POST':
-        logger.info("Начало обработки заказа")
-        
         try:
-            # Валидация данных формы
-            name = request.POST.get('name', '').strip()
-            phone = request.POST.get('phone', '').strip()
-            email = request.POST.get('email', '').strip().lower()
-            comment = request.POST.get('comment', '').strip()
-            privacy_policy = request.POST.get('privacy_policy') == 'on'
-            
-            if not all([name, phone, email]):
-                messages.error(request, 'Пожалуйста, заполните все обязательные поля')
-                return redirect('place-order')
-                
-            if not privacy_policy:
-                messages.error(request, 'Необходимо согласие с политикой конфиденциальности')
-                return redirect('place-order')
-                
-            cart = request.session.get('cart', {})
-            if not cart:
-                messages.error(request, 'Ваша корзина пуста')
-                return redirect('shopping-cart')
-            
-            # Создаем заявку
-            novosibirsk_tz = pytz.timezone('Asia/Novosibirsk')
-            current_time = timezone.now().astimezone(novosibirsk_tz)
-            
-            request_obj = Request.objects.create(
-                customer_name=name,
-                customer_phone=phone,
-                customer_email=email,
-                comment=comment,
-                is_processed=False,
-                privacy_policy_accepted=True,
-                privacy_policy_accepted_at=current_time,
-                created_at=current_time
-            )
-            
-            # Обрабатываем товары
-            total_price = 0
-            has_price_request = False
-            cart_products = []
-            
-            for product_id, quantity in cart.items():
-                try:
-                    product = Product.objects.get(id=product_id)
-                    RequestItem.objects.create(
-                        request=request_obj,
-                        product=product,
-                        quantity=quantity,
-                        price=product.price,
-                        product_name=product.name,
-                        product_description=product.description
-                    )
-                    
-                    item_total = product.price * quantity if product.price else 0
-                    cart_products.append({
-                        'name': product.name,
-                        'quantity': quantity,
-                        'price': product.price if product.price else 'по запросу',
-                        'total': item_total if product.price else 'по запросу'
-                    })
-                    
-                    if product.price:
-                        total_price += item_total
-                    else:
-                        has_price_request = True
-                        
-                except Product.DoesNotExist:
-                    continue
-            
-            # Обновляем заказ
-            request_obj.total_price = total_price if total_price > 0 else None
-            request_obj.has_price_request_items = has_price_request
-            request_obj.save()
-            
-            # Пытаемся отправить письмо, но не блокируем процесс
-            try:
-                pdf_content = generate_order_pdf(request_obj, cart_products)
-                if pdf_content:
-                    # Запускаем отправку в отдельном потоке, чтобы не блокировать ответ
-                    import threading
-                    threading.Thread(
-                        target=send_order_email_with_pdf,
-                        args=(request_obj, cart_products, pdf_content),
-                        daemon=True
-                    ).start()
-            except Exception as e:
-                logger.error(f"Ошибка при генерации PDF: {str(e)}")
-            
-            # Очищаем корзину
-            request.session['cart'] = {}
-            request.session['last_request_id'] = request_obj.id
-            request.session.modified = True
-            
-            return redirect('request-success')
-            
-        except Exception as e:
-            logger.error(f"Ошибка при создании заказа: {str(e)}", exc_info=True)
-            messages.error(request, 'Произошла ошибка при оформлении заказа. Пожалуйста, попробуйте позже.')
-            return redirect('place-order')
-    
-    # GET запрос - отображение формы
-    cart = request.session.get('cart', {})
-    if not cart:
-        messages.warning(request, 'Ваша корзина пуста')
-        return redirect('shopping-cart')
-    
-    cart_items = {}
-    total_cart_price = 0
-    has_price_request_items = False
-    
-    for product_id, quantity in cart.items():
-        try:
-            product = Product.objects.get(id=product_id)
-            cart_items[product] = quantity
-            
-            if product.price is not None:
-                total_cart_price += product.price * quantity
-            else:
-                has_price_request_items = True
-        except Product.DoesNotExist:
+            item = Product.objects.get(id=int(pid))
+            item_qty = int(qty)
+        except (Product.DoesNotExist, TypeError, ValueError):
             continue
-    
-    context = {
-        'cart_items': cart_items,
-        'total_cart_price': total_cart_price if cart_items else None,
-        'has_price_request_items': has_price_request_items
-    }
-    return render(request, 'app/placeOrder.html', context)
+        if item.price is not None:
+            total_cart_price += float(item.price) * item_qty
 
-def _draw_footer(canvas, left_margin, y_pos, privacy_date, order):
-    """Вспомогательная функция для отрисовки футера"""
-    canvas.setFont("DejaVuSans", 8)
-    canvas.drawString(left_margin, y_pos, "Согласие с политикой конфиденциальности: " + 
-                     ("Да" if order.privacy_policy_accepted else "Нет"))
-    canvas.drawString(left_margin, y_pos - 15, f"Дата согласия: {privacy_date}")
-    canvas.drawString(left_margin, y_pos - 30, "Документ сформирован автоматически")
+    if key not in cart:
+        return JsonResponse(
+            {"success": True, "quantity": 0, "total_price": 0, "total_cart_price": total_cart_price}
+        )
 
-def generate_order_pdf(order, cart_products):
+    total_price = float(product.price) * cart[key] if product.price is not None else None
+    return JsonResponse(
+        {
+            "success": True,
+            "quantity": cart[key],
+            "total_price": total_price,
+            "total_cart_price": total_cart_price,
+        }
+    )
+
+
+def placeOrder(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        email = request.POST.get("email", "").strip().lower()
+        comment = request.POST.get("comment", "").strip()
+        privacy_policy = request.POST.get("privacy_policy") == "on"
+
+        if not all([name, phone, email]):
+            return _order_error(request, "Пожалуйста, заполните все обязательные поля")
+        try:
+            validate_email(email)
+        except ValidationError:
+            return _order_error(request, "Укажите корректный email")
+        if not privacy_policy:
+            return _order_error(request, "Необходимо согласие с политикой конфиденциальности")
+
+        cart = request.session.get("cart", {})
+        if not cart:
+            return _order_error(request, "Ваша корзина пуста", "shopping-cart")
+
+        current_time = timezone.now().astimezone(NOVOSIBIRSK)
+        request_obj = Request.objects.create(
+            customer_name=name,
+            customer_phone=phone,
+            customer_email=email,
+            comment=comment,
+            is_processed=False,
+            privacy_policy_accepted=True,
+            privacy_policy_accepted_at=current_time,
+            created_at=current_time,
+        )
+
+        total_price = 0
+        has_price_request = False
+        cart_products = []
+        for product_id, quantity in cart.items():
+            try:
+                product = Product.objects.get(id=int(product_id))
+                qty = int(quantity)
+            except (Product.DoesNotExist, TypeError, ValueError):
+                continue
+            RequestItem.objects.create(
+                request=request_obj,
+                product=product,
+                quantity=qty,
+                price=product.price,
+                product_name=product.name,
+                product_description=product.description,
+            )
+            item_total = float(product.price) * qty if product.price else 0
+            cart_products.append(
+                {
+                    "name": product.name,
+                    "quantity": qty,
+                    "price": product.price if product.price else "по запросу",
+                    "total": item_total if product.price else "по запросу",
+                }
+            )
+            if product.price:
+                total_price += item_total
+            else:
+                has_price_request = True
+
+        request_obj.total_price = total_price if total_price > 0 else None
+        request_obj.has_price_request_items = has_price_request
+        request_obj.save()
+
+        try:
+            pdf_content = generate_order_pdf(request_obj, cart_products)
+            if pdf_content:
+                worker = threading.Thread(
+                    target=send_order_email_with_pdf,
+                    args=(request_obj, pdf_content),
+                    daemon=True,
+                )
+                worker.start()
+                if settings.DEBUG:
+                    worker.join(timeout=5)
+        except Exception:
+            logger.exception("Ошибка при генерации PDF")
+
+        request.session["cart"] = {}
+        request.session["last_request_id"] = request_obj.id
+        request.session.modified = True
+        return redirect("request-success")
+
+    cart = request.session.get("cart", {})
+    if not cart:
+        return _order_error(request, "Ваша корзина пуста", "shopping-cart")
+
+    cart_items, total_cart_price, has_price_request_items = _products_in_cart(cart)
+    return render(
+        request,
+        "app/placeOrder.html",
+        {
+            "cart_items": cart_items,
+            "total_cart_price": total_cart_price if cart_items else None,
+            "has_price_request_items": has_price_request_items,
+        },
+    )
+
+
+def _order_error(request: HttpRequest, text: str, target: str = "place-order") -> HttpResponse:
+    messages.error(request, text)
+    return redirect(target)
+
+
+def _draw_footer(pdf, left_margin: int, y_pos: int, privacy_date: str, order: Request) -> None:
+    pdf.setFont("DejaVuSans", 8)
+    accepted = "Да" if order.privacy_policy_accepted else "Нет"
+    pdf.drawString(left_margin, y_pos, f"Согласие с политикой конфиденциальности: {accepted}")
+    pdf.drawString(left_margin, y_pos - 15, f"Дата согласия: {privacy_date}")
+    pdf.drawString(left_margin, y_pos - 30, "Документ сформирован автоматически")
+
+
+def generate_order_pdf(order: Request, cart_products: list[dict]) -> bytes | None:
     try:
-        # Регистрируем шрифты
         register_fonts()
-        
-        # Инициализируем временные переменные
-        novosibirsk_tz = pytz.timezone('Asia/Novosibirsk')
-        created_at = order.created_at.astimezone(novosibirsk_tz).strftime('%d.%m.%Y %H:%M')
-        privacy_date = order.privacy_policy_accepted_at.astimezone(novosibirsk_tz).strftime('%d.%m.%Y %H:%M')
-        
-        # Создаем буфер для PDF
+        created_at = order.created_at.astimezone(NOVOSIBIRSK).strftime("%d.%m.%Y %H:%M")
+        privacy_date = order.privacy_policy_accepted_at.astimezone(NOVOSIBIRSK).strftime("%d.%m.%Y %H:%M")
+
         buffer = BytesIO()
-        
-        # Создаем canvas (холст) для PDF
-        c = canvas.Canvas(buffer, pagesize=A4)
+        pdf = canvas.Canvas(buffer, pagesize=A4)
         width, height = A4
-        
-        # Устанавливаем отступы и параметры
         left_margin = 50
         right_margin = width - 50
         top_margin = height - 50
-        bottom_margin = 100  # Место для футера
+        bottom_margin = 100
         line_height = 20
         section_spacing = 30
-        
-        # 1. Заголовок документа (первая страница)
-        c.setFont("DejaVuSans-Bold", 18)
-        c.drawString(left_margin, top_margin, "Altay Engineering")
-        
-        c.setFont("DejaVuSans", 10)
-        c.drawString(left_margin, top_margin - line_height, f"Дата: {created_at}")
-        
-        # 2. Информация о заказе
+
+        pdf.setFont("DejaVuSans-Bold", 18)
+        pdf.drawString(left_margin, top_margin, SITE.brand_name)
+        pdf.setFont("DejaVuSans", 10)
+        pdf.drawString(left_margin, top_margin - line_height, f"Дата: {created_at}")
+
         current_y = top_margin - line_height * 2 - 10
-        
-        c.setFont("DejaVuSans-Bold", 14)
-        c.drawString(left_margin, current_y, f"Заказ №{order.id}")
-        
-        # 3. Информация о клиенте
+        pdf.setFont("DejaVuSans-Bold", 14)
+        pdf.drawString(left_margin, current_y, f"Заказ №{order.id}")
         current_y -= line_height + 10
-        
-        c.setFont("DejaVuSans-Bold", 12)
-        c.drawString(left_margin, current_y, "Информация о клиенте:")
+        pdf.setFont("DejaVuSans-Bold", 12)
+        pdf.drawString(left_margin, current_y, "Информация о клиенте:")
         current_y -= line_height
-        
+
         client_data = [
             ["ФИО:", order.customer_name],
             ["Телефон:", order.customer_phone],
             ["Email:", order.customer_email],
-            ["Комментарий:", order.comment or "-"]
+            ["Комментарий:", order.comment or "-"],
         ]
-        
         client_table = Table(client_data, colWidths=[100, 320])
-        client_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'DejaVuSans', 10),
-            ('FONT', (0, 0), (0, -1), 'DejaVuSans-Bold', 10),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 3),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-            ('LINEBELOW', (0, -1), (-1, -1), 0.5, colors.lightgrey),
-        ]))
-        client_table.wrapOn(c, width, height)
-        client_table.drawOn(c, left_margin, current_y - (len(client_data) * line_height))
+        client_table.setStyle(
+            TableStyle(
+                [
+                    ("FONT", (0, 0), (-1, -1), "DejaVuSans", 10),
+                    ("FONT", (0, 0), (0, -1), "DejaVuSans-Bold", 10),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 3),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("LINEBELOW", (0, -1), (-1, -1), 0.5, colors.lightgrey),
+                ]
+            )
+        )
+        client_table.wrapOn(pdf, width, height)
+        client_table.drawOn(pdf, left_margin, current_y - (len(client_data) * line_height))
         current_y -= (len(client_data) * line_height) + section_spacing
-        
-        # 4. Состав заказа (может занимать несколько страниц)
-        c.setFont("DejaVuSans-Bold", 12)
-        c.drawString(left_margin, current_y, "Состав заказа:")
+
+        pdf.setFont("DejaVuSans-Bold", 12)
+        pdf.drawString(left_margin, current_y, "Состав заказа:")
         current_y -= line_height
-        
-        # Разбиваем товары на части для пагинации
-        items_per_page = 25  # Количество товаров на странице
+
         items_data = [["№", "Наименование", "Кол-во", "Цена", "Сумма"]]
-        
         for idx, item in enumerate(cart_products, 1):
-            items_data.append([
-                str(idx),
-                item['name'],
-                str(item['quantity']),
-                format_price(item['price']),
-                format_price(item['total'])
-            ])
-        
-        # Вычисляем высоту таблицы
+            items_data.append(
+                [
+                    str(idx),
+                    item["name"],
+                    str(item["quantity"]),
+                    format_price(item["price"]),
+                    format_price(item["total"]),
+                ]
+            )
+
         row_height = 20
-        header_height = 25
-        table_height = len(items_data) * row_height
-        
-        # Рисуем таблицу по частям
         start_row = 0
         while start_row < len(items_data):
-            # Проверяем, нужно ли создавать новую страницу
-            if current_y - table_height < bottom_margin:
-                # Добавляем футер на текущую страницу
-                _draw_footer(c, left_margin, bottom_margin, privacy_date, order)
-                
-                # Создаем новую страницу
-                c.showPage()
+            if current_y - (len(items_data) * row_height) < bottom_margin and start_row > 0:
+                _draw_footer(pdf, left_margin, bottom_margin, privacy_date, order)
+                pdf.showPage()
                 current_y = top_margin
-                
-                # Заголовок на новой странице
-                c.setFont("DejaVuSans-Bold", 12)
-                c.drawString(left_margin, current_y, "Состав заказа (продолжение):")
+                pdf.setFont("DejaVuSans-Bold", 12)
+                pdf.drawString(left_margin, current_y, "Состав заказа (продолжение):")
                 current_y -= line_height
-            
-            # Определяем сколько строк поместится на текущей странице
+
             available_space = current_y - bottom_margin
             max_rows = min(int(available_space / row_height), len(items_data) - start_row)
+            if max_rows < 1:
+                max_rows = 1
             end_row = start_row + max_rows
-            
-            # Создаем таблицу для текущей части
             part_table = Table(items_data[start_row:end_row], colWidths=[25, 250, 50, 80, 80])
-            part_table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'DejaVuSans', 9),
-                ('FONT', (0, 0), (-1, 0), 'DejaVuSans-Bold', 9),
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f5f5f5')),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 5),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-            ]))
-            
-            # Рисуем часть таблицы
+            part_table.setStyle(
+                TableStyle(
+                    [
+                        ("FONT", (0, 0), (-1, -1), "DejaVuSans", 9),
+                        ("FONT", (0, 0), (-1, 0), "DejaVuSans-Bold", 9),
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f5f5")),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                        ("ALIGN", (2, 1), (-1, -1), "RIGHT"),
+                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ]
+                )
+            )
             part_height = (end_row - start_row) * row_height
-            part_table.wrapOn(c, width, height)
-            part_table.drawOn(c, left_margin, current_y - part_height)
-            
-            # Обновляем позицию и счетчик строк
+            part_table.wrapOn(pdf, width, height)
+            part_table.drawOn(pdf, left_margin, current_y - part_height)
             current_y -= part_height
             start_row = end_row
-        
-        # 5. Итого (на последней странице)
-        c.setFont("DejaVuSans-Bold", 12)
+
+        pdf.setFont("DejaVuSans-Bold", 12)
         total_price_display = format_price(order.total_price) if order.total_price else "по запросу"
-        c.drawString(right_margin - 180, current_y - 20, f"Итого: {total_price_display}")
-        
-        # 6. Футер на последней странице
-        _draw_footer(c, left_margin, bottom_margin, privacy_date, order)
-        
-        # Сохраняем PDF
-        c.save()
+        pdf.drawString(right_margin - 180, current_y - 20, f"Итого: {total_price_display}")
+        _draw_footer(pdf, left_margin, bottom_margin, privacy_date, order)
+        pdf.save()
         return buffer.getvalue()
-
-    except Exception as e:
-        logger.error(f"Ошибка генерации PDF: {str(e)}")
+    except Exception:
+        logger.exception("Ошибка генерации PDF")
         return None
-    
-def send_order_email_with_pdf(order, cart_products, pdf_content):
-    """Отправка письма с прикрепленным PDF"""
+
+
+def send_order_email_with_pdf(order: Request, pdf_content: bytes) -> bool:
+    """Письмо уходит только если в .env явно задан ORDER_NOTIFICATION_EMAIL и SMTP."""
     try:
-        # Проверяем, что письма включены в настройках
-        if not hasattr(settings, 'EMAIL_HOST_USER') or not settings.EMAIL_HOST_USER:
-            logger.warning("Отправка почты отключена (не настроен EMAIL_HOST_USER)")
-            return False
-        
-        novosibirsk_tz = pytz.timezone('Asia/Novosibirsk')
-        created_at = order.created_at.astimezone(novosibirsk_tz).strftime('%d.%m.%Y %H:%M')
-        
-        subject = f'Новый заказ №{order.id} от {order.customer_name}'
-        
-        email_body = f"""
-Поступил новый заказ №{order.id} от {created_at}.
-
-Клиент: {order.customer_name}
-Телефон: {order.customer_phone}
-Email: {order.customer_email}
-
-Детали заказа прикреплены в PDF-файле.
-"""
-        try:
-            email = EmailMessage(
-                subject=subject,
-                body=email_body,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[settings.DEFAULT_FROM_EMAIL],  # Отправляем на тот же адрес
-                reply_to=[order.customer_email]
+        notify_to = getattr(settings, "ORDER_NOTIFICATION_EMAIL", "") or ""
+        if not notify_to:
+            logger.info(
+                "Заявка %s сохранена в БД без письма: ORDER_NOTIFICATION_EMAIL не задан",
+                order.id,
             )
-            
-            if pdf_content:
-                email.attach(
-                    f'order_{order.id}.pdf',
-                    pdf_content,
-                    'application/pdf'
-                )
-            
-            # Отправляем с таймаутом 10 секунд
-            email.timeout = 10
-            email.send(fail_silently=False)
-            logger.info(f"Письмо с заказом {order.id} успешно отправлено")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Ошибка отправки письма: {str(e)}", exc_info=True)
             return False
-            
-    except Exception as e:
-        logger.error(f"Ошибка в send_order_email_with_pdf: {str(e)}", exc_info=True)
+        if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+            logger.info(
+                "Заявка %s сохранена в БД без письма: SMTP (EMAIL_HOST_*) не настроен",
+                order.id,
+            )
+            return False
+
+        created_at = order.created_at.astimezone(NOVOSIBIRSK).strftime("%d.%m.%Y %H:%M")
+        subject = f"Новая демо-заявка №{order.id} от {order.customer_name}"
+        body = (
+            f"Поступила демо-заявка №{order.id} от {created_at}.\n\n"
+            f"Клиент: {order.customer_name}\n"
+            f"Телефон: {order.customer_phone}\n"
+            f"Email: {order.customer_email}\n\n"
+            "Детали прикреплены в PDF. Это pet-проект, не боевой заказ.\n"
+        )
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[notify_to],
+            reply_to=[order.customer_email] if order.customer_email else None,
+        )
+        email.attach(f"order_{order.id}.pdf", pdf_content, "application/pdf")
+        email.send(fail_silently=False)
+        logger.info("Письмо по заявке %s отправлено на %s", order.id, notify_to)
+        return True
+    except Exception:
+        logger.exception("Ошибка отправки письма по заказу %s", order.id)
         return False
 
-@login_required
-def request_success(request):
-    request_id = request.session.get('last_request_id')
+
+def request_success(request: HttpRequest) -> HttpResponse:
+    request_id = request.session.get("last_request_id")
     if not request_id:
-        logger.warning("Попытка доступа к request-success без ID заказа")
-        return redirect('mainPage')
-
-    try:
-        request_obj = Request.objects.get(id=request_id)
-        context = {'request': request_obj}
-        return render(request, 'app/request_success.html', context)
-    except Request.DoesNotExist:
-        logger.error(f"Заказ с ID {request_id} не найден в БД")
-        return redirect('mainPage')
+        return redirect("mainPage")
+    order = Request.objects.filter(id=request_id).first()
+    if order is None:
+        return redirect("mainPage")
+    return render(request, "app/request_success.html", {"order": order})
 
 
-# Детали товаров
-
-def product_detail(request, product_id):
-    # Получаем товар по ID
-    product = get_object_or_404(Product, id=product_id)
-
-    characteristics = {
-    "welding_range": "Диапазон сварки",
-    "drive_type": "Привод",
-    "clamp_count": "Количество зажимов",
-    "power_voltage": "Напряжение питания",
-    "heater_power": "Мощность нагревателя, Вт",
-    "trimmer_power": "Мощность торцевателя, Вт",
-    "hydraulic_power": "Мощность двигателя гидростанции, Вт",
-    "total_power_consumption": "Общая потребляемая мощность, Вт",
-    "max_pressure": "Максимальное давление, бар",
-    "cylinder_area": "Площадь сечения цилиндров, см²",
-    "operating_temp": "Рабочая температура, °C",
-    "net_weight": "Масса нетто/брутто, кг",
-    "dimensions": "Транспортировочные габариты, мм",
-    "warranty": "Гарантия, лет",
-    "packaging_type": "Вид упаковки",
-    "shipment": "Отгрузка",
-    "manufacturer": "Производитель",
-    "pipe_diameter": "Диаметр трубы, мм",
-    "wall_thickness": "Толщина стенки, мм",
-    "availability": "Наличие",
-    "material": "Материал",
-    "conditional_passage": "Условный проход, Ду",
-    "conditional_pressure": "Условное давление, Ду",
-    "working_environment": "Рабочая среда",
-    "working_temperature": "Температура рабочей среды, °С",
-    "weight": "Вес"
-    }
-
-    context = {
-        "product": product,
-        'characteristics': product.get_characteristics(),
-    }   
-
-    return render(request, 'app/products/product_detail.html', context)
+def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
+    product = get_object_or_404(
+        Product.objects.prefetch_related("images", "diameters"),
+        id=product_id,
+    )
+    return render(
+        request,
+        "app/products/product_detail.html",
+        {"product": product, "characteristics": product.get_characteristics()},
+    )
 
 
-# Каталог
-
-def category_view(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    products = Product.objects.filter(category=category)
-
-    # Получаем характеристики, которые относятся к данной категории
-    attributes = category.attributes.all()
-
-    # Собираем уникальные значения характеристик
-    attribute_values = {
-        attr.name: ProductAttributeValue.objects.filter(
-            attribute=attr, product__category=category
-        ).values_list("value", flat=True).distinct()
-        for attr in attributes
-    }
-
-    # Фильтрация товаров
-    filters = {}
-    for attr in attributes:
-        value = request.GET.get(attr.name)
-        if value:
-            filters[f'attribute_values__attribute'] = attr
-            filters[f'attribute_values__value'] = value
-
-    if filters:
-        products = products.filter(**filters).distinct()
-
-    return render(request, "products/baseProducts.html", {
-        "category": category,
-        "products": products,
-        "attributes": attributes,
-        "attribute_values": attribute_values
-    })
+def _coerce_filter_values(field_name: str, values: list[str]) -> list:
+    field = Product._meta.get_field(field_name)
+    internal = field.get_internal_type()
+    coerced = []
+    for raw in values:
+        if internal in {"IntegerField", "PositiveIntegerField", "BigIntegerField", "FloatField"}:
+            try:
+                number = float(str(raw).replace(",", "."))
+                coerced.append(int(number) if internal != "FloatField" else number)
+            except ValueError:
+                continue
+        else:
+            coerced.append(raw)
+    return coerced
 
 
-# Шаблон вывода категории товаров
-def templateProducts(category, request):
-    products = Product.objects.filter(category=category)
-
-    # Получаем все характеристики товаров
-    all_characteristics = {}
+def templateProducts(category: Category, request: HttpRequest) -> HttpResponse:
+    products: QuerySet[Product] = Product.objects.filter(category=category).prefetch_related("images")
+    characteristics: dict[str, str] = {}
     for product in products:
         for field, label in product.get_characteristics().items():
-            if field not in all_characteristics:
-                all_characteristics[field] = label
+            characteristics.setdefault(field, label)
 
-    # Фильтрация по выбранным характеристикам
-    filters = {}
-    filter_queries = Q()
-    
+    selected: dict[str, list[str]] = {}
+    query = Q()
     for key, values in request.GET.lists():
-        if key in all_characteristics:
-            normalized_values = []
-            for v in values:
-                # Заменяем запятые на точки ТОЛЬКО для площади сечения
-                if key == 'cross_sectional_area':
-                    normalized = v.replace(",", ".")
-                else:
-                    normalized = v
-                normalized_values.append(normalized)
-            
-            filters[key] = normalized_values
-            
-            # Для габаритов используем точное сравнение
-            if 'х' in values[0]:  # Если значение содержит символы габаритов
-                filter_queries &= Q(**{f"{key}__in": normalized_values})
-            else:
-                filter_queries &= Q(**{f"{key}__in": normalized_values})
+        if key not in characteristics or not values:
+            continue
+        selected[key] = values
+        coerced = _coerce_filter_values(key, values)
+        if coerced:
+            query &= Q(**{f"{key}__in": coerced})
 
-    # Получаем все возможные значения характеристик ДО фильтрации
-    all_characteristic_values = {}
-    for field in all_characteristics:
-        values = products.values_list(field, flat=True).distinct()
-        all_characteristic_values[field] = [str(v) if v is not None else "" for v in values]
+    filtered = products.filter(query) if selected else products
 
-    # Применяем фильтрацию
-    filtered_products = products.filter(filter_queries) if filters else products
+    def distinct_values(queryset: QuerySet[Product], field: str) -> list[str]:
+        values = queryset.values_list(field, flat=True).distinct()
+        return [str(value) for value in values if value not in (None, "")]
 
-    # Получаем доступные значения характеристик ПОСЛЕ фильтрации
-    available_characteristic_values = {}
-    for field in all_characteristics:
-        if filtered_products.exists():  # Если есть отфильтрованные товары
-            values = filtered_products.values_list(field, flat=True).distinct()
-            available_characteristic_values[field] = [str(v) if v is not None else "" for v in values]
-        else:
-            # Если товаров нет, показываем все возможные значения
-            available_characteristic_values[field] = all_characteristic_values[field]
+    all_characteristic_values = {field: distinct_values(products, field) for field in characteristics}
+    if filtered.exists():
+        available = {field: distinct_values(filtered, field) for field in characteristics}
+    else:
+        available = all_characteristic_values
 
-    return render(request, 'app/products/baseProducts.html', {
-        'category': category,
-        'products': filtered_products,
-        'characteristics': all_characteristics,
-        'selected_filters': filters,
-        'characteristic_values': available_characteristic_values,
-        'all_characteristic_values': all_characteristic_values,
-    })
+    return render(
+        request,
+        "app/products/baseProducts.html",
+        {
+            "category": category,
+            "products": filtered,
+            "characteristics": characteristics,
+            "selected_filters": selected,
+            "characteristic_values": available,
+            "all_characteristic_values": all_characteristic_values,
+        },
+    )
 
 
-# Сварочные аппараты
-def weldingMachines(request):
-    return render(request, 'app/products/weldingMachines.html')
+def weldingMachines(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/products/weldingMachines.html")
 
-# Гидравлические сварочные аппараты  
-def hydraulicMachines(request):
+
+def hydraulicMachines(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Гидравлические сварочные аппараты")
     return templateProducts(category, request)
 
-# Механические
-def mechanicalMachines(request):
+
+def mechanicalMachines(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Механические сварочные аппараты")
     return templateProducts(category, request)
 
-# Электромуфтовые
-def electrofusionMachines(request):
+
+def electrofusionMachines(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Электромуфтовые сварочные аппараты")
     return templateProducts(category, request)
 
-# Раструбные
-def bellShapedMachines(request):
+
+def bellShapedMachines(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Раструбные сварочные аппараты")
     return templateProducts(category, request)
 
 
-# Комплектующие
-def componentsMachines(request):
-    return render(request, 'app/products/components.html')
+def componentsMachines(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/products/components.html")
 
-# Электорцеватель
-def electorate(request):
+
+def electorate(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Электроторцеватели")
     return templateProducts(category, request)
 
-# Электронагреватель
-def electricHeater(request):
+
+def electricHeater(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Электронагреватели")
     return templateProducts(category, request)
 
-# Вкладыши
-def earbuds(request):
+
+def earbuds(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Вкладыши")
     return templateProducts(category, request)
 
-# Сканер
-def scanner(request):
+
+def scanner(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Сканер")
     return templateProducts(category, request)
 
-# Центраторы для сварки труб
-def centralizersPipeWelding(request):
+
+def centralizersPipeWelding(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Центраторы для сварки труб")
     return templateProducts(category, request)
 
 
-# Дополнительные
-def additionalMachines(request):
-    return render(request, 'app/products/additional.html')
+def additionalMachines(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/products/additional.html")
 
-# Блок автоматизации
-def automationUnit(request):
+
+def automationUnit(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Блок автоматизации")
     return templateProducts(category, request)
 
 
+def fitting(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/products/fitting.html")
 
-# Фитинги
-def fitting(request):
-    return render(request, 'app/products/fitting.html')
 
-# Электросварные фитинги
-def electrofusionFittings(request):
+def electrofusionFittings(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Электросварные фитинги")
     return templateProducts(category, request)
 
-# Литые фитинги
-def castFittings(request):
+
+def castFittings(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Литые фитинги")
     return templateProducts(category, request)
 
 
-# Трубы ПНД
-def pipes(request):
-    return render(request, 'app/products/pipes.html')
+def pipes(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/products/pipes.html")
 
-# Трубы ПНД водопроводные
-def waterPipes(request):
+
+def waterPipes(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Трубы ПНД водопроводные")
     return templateProducts(category, request)
 
-# Трубы ПНД для газа
-def gasPipes(request):
+
+def gasPipes(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Трубы ПНД для газа")
     return templateProducts(category, request)
 
 
-# Запорная арматура
-def shutOffValves(request):
-    return render(request, 'app/products/shutOffValves.html')
+def shutOffValves(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/products/shutOffValves.html")
 
-# Фланец
-def shutOffValvesFlange(request):
+
+def shutOffValvesFlange(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Фланец")
     return templateProducts(category, request)
 
-# Фланцевый адаптер
-def shutOffValvesFlangeAdapters(request):
+
+def shutOffValvesFlangeAdapters(request: HttpRequest) -> HttpResponse:
     category = get_object_or_404(Category, name="Фланцевый адаптер")
     return templateProducts(category, request)
 
 
-# Услуги
+def rentalWeldingEquipment(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/service/rentalWeldingEquipment.html")
 
-# Аренда
-def rentalWeldingEquipment(request):
-    return render(request, 'app/service/rentalWeldingEquipment.html')
 
-# Ремонт
-def repairWeldingEquipment(request):
-    return render(request, 'app/service/repairWeldingEquipment.html')
+def repairWeldingEquipment(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/service/repairWeldingEquipment.html")
 
-# Монтаж трубопровода
-def pipelineInstallation(request):
-    return render(request, 'app/service/pipelineInstallation.html')
+
+def pipelineInstallation(request: HttpRequest) -> HttpResponse:
+    return render(request, "app/service/pipelineInstallation.html")

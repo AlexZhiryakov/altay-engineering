@@ -14,109 +14,92 @@
 </nav>
 <main>
     <h1>Реквизиты</h1>
+    <p class="demo-note">Все реквизиты ниже вымышленные и приведены только для демонстрации интерфейса pet-проекта.</p>
     <div class="card">
         <div class="string">
             <p class="name">Организационно-правовая форма</p>
-            <p>Общество с ограниченной ответственностью</p>
+            <p>Общество с ограниченной ответственностью (демо)</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Наименование организации полное</p>
-            <p>Общество с ограниченной ответственностью «Алтай-Инжиниринг»</p>
+            <p>Общество с ограниченной ответственностью «AlexZhiryakov»</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Наименование организации сокращенное</p>
-            <p>ООО «Алтай-Инжиниринг»</p>
+            <p>{{ site.legal_name }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Юридический адрес</p>
-            <p>656062, Алтайский край, г Барнаул, ул Антона Петрова, д. 254, кв. 413</p>
+            <p>{{ site.legal_address }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Фактический адрес</p>
-            <p>656062, Алтайский край, г Барнаул, ул Антона Петрова, д. 254, кв. 413</p>
-        </div>
-        <span></span>
-        <div class="string">
-            <p class="name">Наименование организации полное</p>
-            <p>Общество с ограниченной ответственностью «Алтай-Инжиниринг»</p>
-        </div>
-        <span></span>
-        <div class="string">
-            <p class="name">Наименование организации сокращенное</p>
-            <p>ООО «Алтай-Инжиниринг»</p>
-        </div>
-        <span></span>
-        <div class="string">
-            <p class="name">Юридический адрес</p>
-            <p>656062, Алтайский край, г Барнаул, ул Антона Петрова, д. 254, кв. 413</p>
+            <p>{{ site.office_full }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">ИНН</p>
-            <p>2223643094</p>
+            <p>{{ site.inn }} (демо)</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">КПП</p>
-            <p>222301001</p>
+            <p>{{ site.kpp }} (демо)</p>
         </div>
         <span></span>
         <div class="string">
-            <p class="name">Дата постановки на учет</p>
-            <p>14.09.2023</p>
-        </div>
-        <span></span>
-        <div class="string">
-            <p class="name">Основной государственный регистрационный номер (ОГРН)</p>
-            <p>1232200016245</p>
+            <p class="name">ОГРН</p>
+            <p>{{ site.ogrn }} (демо)</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">ОКПО</p>
-            <p>87108370</p>
+            <p>{{ site.okpo }} (демо)</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Сведения о видах деятельности</p>
-            <p>46.74 Торговля оптовая скобяными изделиями, водопроводным и отопительным оборудованием и принадлежностями</p>
+            <p>{{ site.activity }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Наименование банка</p>
-            <p>Филиал «Новосибирский» АО «Альфа-банк»</p>
+            <p>{{ site.bank_name }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Расчетный счет</p>
-            <p>40702810923100009211</p>
+            <p>{{ site.checking_account }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">К/ счет</p>
-            <p>30101810600000000774</p>
+            <p>{{ site.correspondent_account }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">БИК Банка</p>
-            <p>045004774</p>
+            <p>{{ site.bik }}</p>
         </div>
         <span></span>
         <div class="string">
-            <p class="name">Телефон/факс</p>
-            <p>+7(913)262-2005</p>
+            <p class="name">Телефон</p>
+            <p>{{ site.phone_primary }}</p>
+        </div>
+        <span></span>
+        <div class="string">
+            <p class="name">Электронная почта</p>
+            <p>{{ site.email }}</p>
         </div>
         <span></span>
         <div class="string">
             <p class="name">Генеральный директор</p>
-            <p>Кошуба Сергей Владимирович</p>
+            <p>{{ site.director }}</p>
         </div>
-    </div>
-    <div class="download_block">
-        <a class="download" href="{% url 'download_file' %}">СКАЧАТЬ ФАЙЛ С РЕКВИЗИТАМИ</a>
     </div>
 </main>
 {% endblock %}
@@ -125,20 +108,16 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const elements = document.querySelectorAll('h1, .string');
-
         const observer = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
-                    observer.unobserve(entry.target); // Отключаем слежку после появления элемента
+                    observer.unobserve(entry.target);
                 }
             });
-        }, {
-            threshold: 0.2 // Чем меньше значение, тем раньше появится элемент
-        });
-
+        }, { threshold: 0.2 });
         elements.forEach(element => {
-            element.classList.add('fade-in-scroll'); // Добавляем класс анимации
+            element.classList.add('fade-in-scroll');
             observer.observe(element);
         });
     });
