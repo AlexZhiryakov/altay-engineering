@@ -4,11 +4,21 @@ import os
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+
+def _project_root() -> Path:
+    here = Path(__file__).resolve().parent
+    # root entrypoint.py -> here; scripts/entrypoint.py -> here.parent
+    if (here / "manage.py").is_file():
+        return here
+    if (here.parent / "manage.py").is_file():
+        return here.parent
+    return here
+
+
+ROOT = _project_root()
 
 
 def main() -> None:
-    # `python scripts/entrypoint.py` adds scripts/ to sys.path, not the project root.
     os.chdir(ROOT)
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
@@ -40,6 +50,8 @@ def main() -> None:
             "--bind",
             f"0.0.0.0:{port}",
             "--chdir",
+            str(ROOT),
+            "--pythonpath",
             str(ROOT),
             "--workers",
             "1",
