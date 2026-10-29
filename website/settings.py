@@ -27,6 +27,17 @@ def _csv(name: str, default: str) -> list[str]:
 ALLOWED_HOSTS = _csv("ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = _csv("CSRF_TRUSTED_ORIGINS", "")
 
+# Layero: production + preview-хосты (*.layero.app / *-main.layero.app).
+# Префикс «.» — subdomain-wildcard Django (см. ALLOWED_HOSTS).
+if not DEBUG and "*" not in ALLOWED_HOSTS and ".layero.app" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, ".layero.app"]
+for _host in ALLOWED_HOSTS:
+    if _host in {"*", "localhost", "127.0.0.1"} or _host.startswith("."):
+        continue
+    _origin = f"https://{_host}"
+    if _origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, _origin]
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
