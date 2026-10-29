@@ -4,7 +4,7 @@
 
 ## Layero (рекомендуется для РФ, Free без карты)
 
-В репозитории есть `layero.json`: runtime `python_web`, старт `python scripts/entrypoint.py` (migrate + каталог из fixture + collectstatic + gunicorn).
+В репозитории есть `layero.json`: runtime `python_web`, старт `python entrypoint.py` (migrate + каталог из fixture + collectstatic + gunicorn).
 
 1. Запушьте папку `website` на GitHub (`media/` и `app/fixtures/` должны быть в репозитории).
 2. [app.layero.ru](https://app.layero.ru/) → новый проект из GitHub **или** в корне проекта:

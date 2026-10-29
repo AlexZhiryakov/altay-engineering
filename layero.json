@@ -1,4 +1,4 @@
 {
   "runtime": "python_web",
-  "startCommand": "python scripts/entrypoint.py"
+  "startCommand": "python entrypoint.py"
 }

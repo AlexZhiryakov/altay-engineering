@@ -26,4 +26,4 @@ RUN mkdir -p /app/data \
 
 EXPOSE 7860
 
-CMD ["python", "scripts/entrypoint.py"]
+CMD ["python", "entrypoint.py"]
