@@ -1,10 +1,18 @@
 """Миграции, каталог, static и gunicorn — для Layero / Docker / Railway."""
 
 import os
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def main() -> None:
+    # `python scripts/entrypoint.py` adds scripts/ to sys.path, not the project root.
+    os.chdir(ROOT)
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+
     sqlite_path = os.environ.get("SQLITE_PATH")
     if sqlite_path:
         Path(sqlite_path).parent.mkdir(parents=True, exist_ok=True)
@@ -31,6 +39,8 @@ def main() -> None:
             "website.wsgi:application",
             "--bind",
             f"0.0.0.0:{port}",
+            "--chdir",
+            str(ROOT),
             "--workers",
             "1",
             "--threads",
