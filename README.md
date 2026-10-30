@@ -92,11 +92,4 @@ pip install -r requirements-dev.txt
 ruff check .
 python manage.py test
 ```
-
----
-
-## Автор
-
-[AlexZhiryakov](https://github.com/AlexZhiryakov) · `alexzhiryakov17@mail.ru`
-
 Лицензия: [MIT](LICENSE)
