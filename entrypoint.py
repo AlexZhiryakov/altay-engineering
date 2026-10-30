@@ -7,7 +7,6 @@ from pathlib import Path
 
 def _project_root() -> Path:
     here = Path(__file__).resolve().parent
-    # root entrypoint.py -> here; scripts/entrypoint.py -> here.parent
     if (here / "manage.py").is_file():
         return here
     if (here.parent / "manage.py").is_file():
@@ -16,6 +15,28 @@ def _project_root() -> Path:
 
 
 ROOT = _project_root()
+
+
+def _ensure_superuser() -> None:
+    username = os.environ.get("DJANGO_SUPERUSER_USERNAME", "").strip()
+    password = os.environ.get("DJANGO_SUPERUSER_PASSWORD", "").strip()
+    email = os.environ.get("DJANGO_SUPERUSER_EMAIL", "").strip()
+    if not username or not password:
+        return
+
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    user, _created = User.objects.get_or_create(
+        username=username,
+        defaults={"email": email, "is_staff": True, "is_superuser": True},
+    )
+    user.is_staff = True
+    user.is_superuser = True
+    if email:
+        user.email = email
+    user.set_password(password)
+    user.save()
 
 
 def main() -> None:
@@ -30,7 +51,6 @@ def main() -> None:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "website.settings")
 
     import django
-    from django.contrib.auth import get_user_model
     from django.core.management import call_command
 
     django.setup()
@@ -41,15 +61,7 @@ def main() -> None:
     if not Category.objects.exists():
         call_command("loaddata", "catalog")
     call_command("collectstatic", interactive=False, verbosity=0)
-
-    # Опционально: админ из env (для просмотра заявок на Layero).
-    if os.environ.get("DJANGO_SUPERUSER_USERNAME") and os.environ.get(
-        "DJANGO_SUPERUSER_PASSWORD"
-    ):
-        User = get_user_model()
-        username = os.environ["DJANGO_SUPERUSER_USERNAME"]
-        if not User.objects.filter(username=username).exists():
-            call_command("createsuperuser", interactive=False)
+    _ensure_superuser()
 
     port = os.environ.get("PORT", "8000")
     os.execvp(
