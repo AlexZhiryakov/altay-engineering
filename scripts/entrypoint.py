@@ -30,6 +30,7 @@ def main() -> None:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "website.settings")
 
     import django
+    from django.contrib.auth import get_user_model
     from django.core.management import call_command
 
     django.setup()
@@ -40,6 +41,15 @@ def main() -> None:
     if not Category.objects.exists():
         call_command("loaddata", "catalog")
     call_command("collectstatic", interactive=False, verbosity=0)
+
+    # Опционально: админ из env (для просмотра заявок на Layero).
+    if os.environ.get("DJANGO_SUPERUSER_USERNAME") and os.environ.get(
+        "DJANGO_SUPERUSER_PASSWORD"
+    ):
+        User = get_user_model()
+        username = os.environ["DJANGO_SUPERUSER_USERNAME"]
+        if not User.objects.filter(username=username).exists():
+            call_command("createsuperuser", interactive=False)
 
     port = os.environ.get("PORT", "8000")
     os.execvp(
