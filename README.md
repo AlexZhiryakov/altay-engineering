@@ -1,6 +1,6 @@
-# 🛠️ AlexZhiryakov · демо-каталог
+# 🛠️ AlexZhiryakov
 
-Pet-проект / портфолио: демонстрационный каталог сварочного оборудования, труб ПНД и фитингов на Django. Витрина, фильтры, корзина заявок и админка — без реальной оплаты и с вымышленными контактами.
+Pet-проект: каталог сварочного оборудования, труб ПНД и фитингов на Django. Витрина, фильтры, корзина заявок и админка — без реальной оплаты и с вымышленными контактами.
 
 [![CI](https://github.com/AlexZhiryakov/altay-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexZhiryakov/altay-engineering/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -12,7 +12,7 @@ Pet-проект / портфолио: демонстрационный ката
 ## 🔗 Живое демо
 
 - Сайт: [altay-engineering.layero.app](https://altay-engineering.layero.app/)
-- Админка: [altay-engineering.layero.app/admin/](https://altay-engineering.layero.app/admin/) (нужен суперпользователь из переменных окружения)
+- Админка: [altay-engineering.layero.app/admin/](https://altay-engineering.layero.app/admin/)
 
 ---
 
