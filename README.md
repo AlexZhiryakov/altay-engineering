@@ -1,82 +1,102 @@
-# AlexZhiryakov · демо-каталог
+# 🛠️ AlexZhiryakov · демо-каталог
 
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+Pet-проект / портфолио: демонстрационный каталог сварочного оборудования, труб ПНД и фитингов на Django. Витрина, фильтры, корзина заявок и админка — без реальной оплаты и с вымышленными контактами.
+
+[![CI](https://github.com/AlexZhiryakov/altay-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexZhiryakov/altay-engineering/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.1-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/AlexZhiryakov/altay-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexZhiryakov/altay-engineering/actions/workflows/ci.yml)
 
-**Pet-проект / портфолио.** Демонстрационный каталог сварочного оборудования, труб ПНД и фитингов. Сайт показывает витрину, фильтры, корзину заявок и админку Django. Это не действующий бизнес и не интернет-магазин: оплата не принимается, контакты и реквизиты вымышленные.
+---
 
-**Live-демо:** после деплоя на [Layero](https://app.layero.ru/) (см. [docs/DEPLOY.md](docs/DEPLOY.md)).
+## 🔗 Живое демо
 
-## English
+- Сайт: [altay-engineering.layero.app](https://altay-engineering.layero.app/)
+- Админка: [altay-engineering.layero.app/admin/](https://altay-engineering.layero.app/admin/) (нужен суперпользователь из переменных окружения)
 
-Portfolio Django catalog for HDPE pipes, fittings and welding equipment. Demo-only: no real payments, fictional contacts. SQLite by default. See [docs/DEPLOY.md](docs/DEPLOY.md).
+---
 
-## Возможности
+## 📖 О проекте
 
-- Каталог с фильтрами и карточками товаров
-- Корзина и демо-заявка с согласием на обработку ПДн
-- PDF заявки и письмо менеджеру при настроенной почте
-- Юридические страницы: конфиденциальность, условия, cookies, возврат
-- Баннер «это pet-проект» и информационный cookie-баннер
-- Админка Django
+Учебный B2B-каталог: категории и карточки товаров, фильтры, корзина и оформление демо-заявки с согласием на обработку ПДн. Заявка сохраняется в БД; при настроенном SMTP можно отправить PDF менеджеру.
 
-## Стек
+На сайте есть юридические страницы (конфиденциальность, условия, cookies, возврат), баннер «это pet-проект» и cookie-баннер. Контакты, адреса и реквизиты вымышленные — только для портфолио.
 
-- Python 3.11, Django 5.1
-- **SQLite** по умолчанию (товары, заявки, сессии)
-- MySQL опционально через `DB_ENGINE=mysql`
-- Pillow, ReportLab, WhiteNoise, Gunicorn
+Стартовый каталог и фото едут с репозиторием (`app/fixtures/catalog.json`, `media/`). На Layero Free диск эфемерный: каталог поднимается при старте, заявки после cold start могут пропасть.
 
-## Где лежат данные
+**English:** Portfolio Django catalog for welding equipment, HDPE pipes and fittings. Demo-only storefront with cart, request flow and admin. No real payments; fictional contacts. SQLite by default.
 
-| Что | Где |
-| --- | --- |
-| Товары, категории, фото-метаданные | таблица SQLite `db.sqlite3` (или MySQL) |
-| Файлы фотографий | папка `media/products/` |
-| Заявки клиентов | таблицы `app_request`, `app_requestitem` в той же БД |
-| Корзина | session cookie Django |
-| Секреты | `.env` (не в git) |
+---
 
-Стартовый каталог загружается из `app/fixtures/catalog.json`.
+## 🛠️ Стек технологий
 
-## Запуск локально
+- **Python 3.11** — язык проекта
+- **Django 5.1** — маршруты, ORM, админка, сессии корзины
+- **SQLite** — БД по умолчанию (`DB_ENGINE=mysql` — опционально MySQL)
+- **Gunicorn + WhiteNoise** — продакшен-сервер и статика
+- **Pillow / ReportLab** — изображения и PDF заявок
+- **Layero** — деплой (`layero.json`, `entrypoint.py`)
+
+---
+
+## 🚀 Как пользоваться сайтом
+
+1. Откройте [живое демо](https://altay-engineering.layero.app/).
+2. На главной — описание pet-проекта, блоки каталога и услуг, карта (если задан `YANDEX_MAPS_API_KEY`).
+3. В **Каталоге** откройте категорию → карточку товара → «В корзину».
+4. В корзине оформите заявку (имя, телефон, согласие на ПДн).
+5. После отправки откроется страница успеха с номером заявки — запись в БД демо-проекта.
+6. Заявки смотрите в админке `/admin/` → **Requests** / **Request items**.
+
+---
+
+## ▶️ Быстрый старт
+
+### Локально
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env.example .env
+Copy-Item .env.example .env
 python manage.py migrate
 python manage.py loaddata catalog
 python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Сайт: http://127.0.0.1:8000
+Сайт: http://127.0.0.1:8000 · админка: http://127.0.0.1:8000/admin/
 
-## Деплой
+В `.env` достаточно `DEBUG` и `SECRET_KEY` для локального демо. Почта и `YANDEX_MAPS_API_KEY` — по желанию.
+
+### Деплой
 
 Пошагово: [docs/DEPLOY.md](docs/DEPLOY.md).
 
-Кратко:
+- `layero.json` — runtime `python_web`, старт `python entrypoint.py` (migrate, каталог, collectstatic, gunicorn)
+- На Layero задайте `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, при необходимости `YANDEX_MAPS_API_KEY` и `DJANGO_SUPERUSER_*` для админки
+- Также возможны Railway (Docker) и Hugging Face Spaces — см. DEPLOY.md
 
-1. **Layero** — Free без карты, до 5 проектов; конфиг в `layero.json`.
-2. **Railway** — Docker, у нового аккаунта часто просят карту.
-3. **Hugging Face Spaces** — бесплатно без карты, сайт засыпает без визитов.
+Юридическое и безопасность: [docs/LEGAL_AND_SECURITY.md](docs/LEGAL_AND_SECURITY.md).
 
-## Юридическое и безопасность
+---
 
-См. [docs/LEGAL_AND_SECURITY.md](docs/LEGAL_AND_SECURITY.md).
+## 🧪 Тесты и качество
+
+- `python manage.py test` — тесты приложения
+- `ruff check .` — линтер
+- CI в GitHub Actions: lint + `manage.py check` + tests на каждый push / PR
+
+```powershell
+pip install -r requirements-dev.txt
+ruff check .
+python manage.py test
+```
+
+---
 
 ## Автор
 
-[AlexZhiryakov](https://github.com/AlexZhiryakov)
+[AlexZhiryakov](https://github.com/AlexZhiryakov) · `alexzhiryakov17@mail.ru`
 
-Контактная почта на сайте: `alexzhiryakov17@mail.ru`.
-Письма с PDF заявок уходят только если в `.env` явно заданы SMTP и `ORDER_NOTIFICATION_EMAIL`.
-
-## Лицензия
-
-[MIT](LICENSE)
+Лицензия: [MIT](LICENSE)
